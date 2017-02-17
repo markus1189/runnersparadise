@@ -3,7 +3,6 @@ package services
 
 import de.codecentric.domain.{Race, RaceId, Runner, RunnerId}
 import de.codecentric.persistence.{RaceAlg, RunnerAlg}
-import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
@@ -15,13 +14,13 @@ import scalaz.syntax.apply._
 
 object RaceService {
   def service(implicit A: RunnerAlg[Task] with RaceAlg[Task]) = HttpService {
+    case GET -> Root / "runner" / RunnerIdVar(RunnerId("6")) =>
+      Ok(Runner(RunnerId("6"), "Runner", "6", None).asJson)
     case GET -> Root / "runner" / RunnerIdVar(rid) =>
       RunnerAlg().findRunner(rid).flatMap {
         case Some(runner) => Ok(runner.asJson)
         case None         => NotFound()
       }
-    case GET -> Root / "runner" / RunnerIdVar(RunnerId("6")) =>
-      Ok(Runner(RunnerId("6"), "Runner", "6", None).asJson)
     case GET -> Root / "race" / RaceIdVar(rid) =>
       RaceAlg().findRace(rid).flatMap {
         case Some(race) => Ok(race.asJson)
