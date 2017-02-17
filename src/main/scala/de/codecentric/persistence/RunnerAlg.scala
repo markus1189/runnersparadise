@@ -4,9 +4,9 @@ package persistence
 import de.codecentric.domain.{Runner, RunnerId}
 
 trait RunnerAlg[F[_]] {
-  def save(runner: Runner): F[Unit]
+  def saveRunner(runner: Runner): F[Unit]
 
-  def find(id: RunnerId): F[Option[Runner]]
+  def findRunner(id: RunnerId): F[Option[Runner]]
 }
 
 object RunnerAlg {

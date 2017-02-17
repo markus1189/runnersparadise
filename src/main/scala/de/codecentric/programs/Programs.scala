@@ -9,8 +9,8 @@ import scalaz._
 trait Programs {
   def register[F[_] : Monad : RunnerAlg : RaceAlg](runnerId: RunnerId, raceId: RaceId): F[Option[Race]] = {
     for {
-      runner <- OptionT(RunnerAlg().find(runnerId))
-      race <- OptionT(RaceAlg().find(raceId))
+      runner <- OptionT(RunnerAlg().findRunner(runnerId))
+      race <- OptionT(RaceAlg().findRace(raceId))
       newRace <- OptionT(race.register(runner).pure[F])
     } yield newRace
   }.run
