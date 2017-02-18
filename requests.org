@@ -1,0 +1,41 @@
+#+PROPERTY: header-args:sh  :results output drawer
+
+# Delete all drawers: C-u C-c C-v k
+# Jump to block: C-c C-v g
+
+#+BEGIN_SRC sh
+curl localhost:8080/about
+#+END_SRC
+
+#+NAME: Create new race
+#+BEGIN_SRC sh
+curl -i -XPOST \
+     -H 'Content-Type: application/json' \
+     -d  "$(jo name="Runners Paradise Race" maxAttendees=5)" \
+     localhost:8080/race
+#+END_SRC
+
+#+NAME: Initialize a new registration
+#+BEGIN_SRC sh
+curl -i -XPOST \
+     -H 'Content-Type: application/json' \
+     -d "$(jo race=RACE)" \
+     localhost:8080/registration/new
+
+#+END_SRC
+
+#+NAME: Create new runner
+#+BEGIN_SRC sh
+curl -i -XPOST \
+     -H "Content-Type: application/json" \
+     -d "$(jo firstname=Markus lastname=Hauck nickname=markus1189)" \
+     localhost:8080/runner
+#+END_SRC
+
+#+NAME: Register a runner for a race
+#+BEGIN_SRC sh
+curl -i -XPUT \
+     -H 'Content-Type: application/json' \
+     -d  "$(jo runner=RUNNER race=RACE)" \
+     localhost:8080/registration/add
+#+END_SRC
