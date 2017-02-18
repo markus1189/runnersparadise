@@ -1,6 +1,8 @@
 package de
 
-package object codecentric {
+import scalaz.syntax.ToEqualOps
+
+package object codecentric extends ScalazSyntax {
   type Traversable[+A] = scala.collection.immutable.Traversable[A]
   val Traversable = scala.collection.immutable.Traversable
 
@@ -17,3 +19,5 @@ package object codecentric {
   type IndexedSeq[+A] = scala.collection.immutable.IndexedSeq[A]
   val IndexedSeq = scala.collection.immutable.IndexedSeq
 }
+
+trait ScalazSyntax extends ToEqualOps

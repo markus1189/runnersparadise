@@ -1,9 +1,10 @@
-package de.codecentric.runnersparadise.domain
+package de.codecentric
+package runnersparadise.domain
 
 import java.util.UUID
 
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.{Decoder, Encoder}
 
 import scalaz.Equal
 

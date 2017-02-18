@@ -1,8 +1,8 @@
 package de.codecentric
 package runnersparadise
 
+import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
-import de.codecentric.runnersparadise.persistence.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
 import io.circe.syntax._

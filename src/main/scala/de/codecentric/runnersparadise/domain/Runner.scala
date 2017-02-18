@@ -1,4 +1,5 @@
-package de.codecentric.runnersparadise.domain
+package de.codecentric
+package runnersparadise.domain
 
 import java.util.UUID
 

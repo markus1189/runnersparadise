@@ -1,4 +1,5 @@
-package de.codecentric.runnersparadise
+package de.codecentric
+package runnersparadise
 
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.{Server, ServerApp}
@@ -6,6 +7,7 @@ import org.http4s.server.{Server, ServerApp}
 import scalaz.concurrent.Task
 
 object Main extends ServerApp {
+  import interpreters.InMemory._
 
   val srv: RaceRegistrationService = new RaceRegistrationService
 

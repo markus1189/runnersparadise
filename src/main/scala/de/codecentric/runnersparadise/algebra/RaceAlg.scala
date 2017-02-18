@@ -1,4 +1,5 @@
-package de.codecentric.runnersparadise.persistence
+package de.codecentric
+package runnersparadise.algebra
 
 import de.codecentric.runnersparadise.domain.{Race, RaceId}
 

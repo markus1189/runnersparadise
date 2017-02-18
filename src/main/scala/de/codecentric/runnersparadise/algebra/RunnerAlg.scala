@@ -1,8 +1,8 @@
 package de.codecentric
-package de.codecentric.runnersparadise.persistence
+package runnersparadise.algebra
 
-import de.codecentric.runnersparadise.domain.{Runner, RunnerId}
 import de.codecentric.runnersparadise.RaceRegistrationService.AddRunner
+import de.codecentric.runnersparadise.domain.{Runner, RunnerId}
 
 trait RunnerAlg[F[_]] {
   def saveRunner(runner: Runner): F[Unit]

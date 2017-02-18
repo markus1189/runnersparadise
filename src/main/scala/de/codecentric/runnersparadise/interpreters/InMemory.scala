@@ -1,10 +1,10 @@
-package de.codecentric.runnersparadise.interpreters
+package de.codecentric
+package runnersparadise.interpreters
 
 import de.codecentric.runnersparadise.domain._
-import de.codecentric.runnersparadise.persistence.{RaceAlg, RegistrationAlg, RunnerAlg}
+import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg}
 
 import scalaz.concurrent.Task
-import scalaz.syntax.equal._
 
 object InMemory extends {
   private var runnerStore: Map[RunnerId, Runner]  = Map()
