@@ -1,8 +1,8 @@
 package de.codecentric
-package persistence
+package de.codecentric.runnersparadise.persistence
 
-import de.codecentric.domain.{Runner, RunnerId}
-import de.codecentric.services.RaceRegistrationService.AddRunner
+import de.codecentric.runnersparadise.domain.{Runner, RunnerId}
+import de.codecentric.runnersparadise.RaceRegistrationService.AddRunner
 
 trait RunnerAlg[F[_]] {
   def saveRunner(runner: Runner): F[Unit]

@@ -1,6 +1,6 @@
-package de.codecentric.persistence
+package de.codecentric.runnersparadise.persistence
 
-import de.codecentric.domain.{Race, RaceId}
+import de.codecentric.runnersparadise.domain.{Race, RaceId}
 
 trait RaceAlg[F[_]] {
   def saveRace(race: Race): F[Unit]

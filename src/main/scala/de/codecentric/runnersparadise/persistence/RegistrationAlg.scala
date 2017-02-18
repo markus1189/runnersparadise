@@ -1,6 +1,6 @@
-package de.codecentric.persistence
+package de.codecentric.runnersparadise.persistence
 
-import de.codecentric.domain.{RaceId, Registration}
+import de.codecentric.runnersparadise.domain.{RaceId, Registration}
 
 trait RegistrationAlg[F[_]] {
   def findReg(id: RaceId): F[Option[Registration]]

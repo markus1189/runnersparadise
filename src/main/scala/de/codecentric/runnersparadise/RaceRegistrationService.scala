@@ -1,9 +1,9 @@
 package de.codecentric
-package services
+package runnersparadise
 
-import de.codecentric.domain.{Race, RaceId, RunnerId}
-import de.codecentric.persistence.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
-import de.codecentric.programs.Programs
+import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
+import de.codecentric.runnersparadise.persistence.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
+import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
 import io.circe.syntax._
 import org.http4s._

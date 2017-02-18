@@ -1,4 +1,4 @@
-package de.codecentric.domain
+package de.codecentric.runnersparadise.domain
 
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}

@@ -1,7 +1,7 @@
-package de.codecentric.programs
+package de.codecentric.runnersparadise.programs
 
-import de.codecentric.domain.{RaceId, Registration, RunnerId}
-import de.codecentric.persistence.{RaceAlg, RegistrationAlg, RunnerAlg}
+import de.codecentric.runnersparadise.domain.{RaceId, Registration, RunnerId}
+import de.codecentric.runnersparadise.persistence.{RaceAlg, RegistrationAlg, RunnerAlg}
 
 import scalaz.Scalaz._
 import scalaz._
