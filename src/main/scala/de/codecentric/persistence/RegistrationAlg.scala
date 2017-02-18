@@ -6,6 +6,8 @@ trait RegistrationAlg[F[_]] {
   def findReg(id: RaceId): F[Option[Registration]]
 
   def saveReg(reg: Registration): F[Unit]
+
+  def newReg(raceId: RaceId): F[Option[Registration]]
 }
 
 object RegistrationAlg {

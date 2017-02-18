@@ -1,20 +1,9 @@
 package de.codecentric.domain
 
-import java.util.UUID
-
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.{Decoder, Encoder}
 
-case class RegistrationId(value: String) extends AnyVal
-
-object RegistrationId {
-  def random() = RegistrationId(UUID.randomUUID().toString)
-
-  implicit val encoder: Encoder[RegistrationId] = Encoder[String].contramap(_.value)
-  implicit val decoder: Decoder[RegistrationId] = Decoder[String].map(RegistrationId(_))
-}
-
-case class Registration(id: RegistrationId, race: Race, attendees: Vector[Runner]) {
+case class Registration(race: Race, attendees: Vector[Runner]) {
   val freePlaces: Long = race.maxAttendees - attendees.size
 
   def add(runner: Runner): Option[Registration] = {
