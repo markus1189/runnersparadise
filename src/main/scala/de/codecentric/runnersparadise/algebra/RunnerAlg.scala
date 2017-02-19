@@ -1,7 +1,7 @@
 package de.codecentric
 package runnersparadise.algebra
 
-import de.codecentric.runnersparadise.RaceRegistrationService.AddRunner
+import de.codecentric.runnersparadise.api.RaceRegistrationService.AddRunner
 import de.codecentric.runnersparadise.domain.{Runner, RunnerId}
 
 trait RunnerAlg[F[_]] {

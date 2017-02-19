@@ -1,12 +1,11 @@
-package de.codecentric
-package runnersparadise.interpreters
+package de.codecentric.runnersparadise.interpreters
 
-import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg}
+import de.codecentric.runnersparadise.domain._
 
 import scalaz.concurrent.Task
 
-object InMemory extends {
+class InMemoryInterpreters extends {
   var runnerStore: Map[RunnerId, Runner]  = Map()
   var raceStore: Map[RaceId, Race]        = Map()
   var regStore: Map[RaceId, Registration] = Map()
@@ -17,7 +16,9 @@ object InMemory extends {
       Task(())
     }
 
-    override def findRunner(id: RunnerId): Task[Option[Runner]] = Task(runnerStore.get(id))
+    override def findRunner(id: RunnerId): Task[Option[Runner]] = {
+      Task(runnerStore.get(id))
+    }
   }
 
   implicit val races: RaceAlg[Task] = new RaceAlg[Task] {
@@ -26,7 +27,9 @@ object InMemory extends {
       Task(())
     }
 
-    override def findRace(id: RaceId): Task[Option[Race]] = Task(raceStore.get(id))
+    override def findRace(id: RaceId): Task[Option[Race]] = {
+      Task(raceStore.get(id))
+    }
   }
 
   implicit val registrations: RegistrationAlg[Task] = new RegistrationAlg[Task] {

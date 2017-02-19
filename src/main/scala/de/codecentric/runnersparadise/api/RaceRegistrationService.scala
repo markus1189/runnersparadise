@@ -1,7 +1,11 @@
-package de.codecentric
-package runnersparadise
+package de.codecentric.runnersparadise.api
 
-import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
+import de.codecentric.runnersparadise.algebra.{
+  RaceAlg,
+  RegistrationAlg,
+  RunnerAlg,
+  RunnerFunctions
+}
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
@@ -21,6 +25,17 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
   import RaceRegistrationService._
 
   def service: HttpService = {
+    def route = HttpService {
+      case GET -> Root / "about"                           => handleAbout()
+      case GET -> Root / "runner" / RunnerIdVar(rid)       => handleGetRunner(rid)
+      case GET -> Root / "race" / RaceIdVar(rid)           => handleGetRace(rid)
+      case GET -> Root / "registration" / RaceIdVar(rid)   => handleGetRegistration(rid)
+      case request @ POST -> Root / "registration" / "new" => handleNewRegistration(request)
+      case request @ PUT -> Root / "registration" / "add"  => handleRegistration(request)
+      case request @ POST -> Root / "runner"               => handleAddRunner(request)
+      case request @ POST -> Root / "race"                 => handleAddRace(request)
+    }
+
     def handleAddRace(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRace], strict = true) { r =>
         val raceId = RaceId.random()
@@ -35,14 +50,14 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleGetRunner(rid: RunnerId): Task[Response] = {
       RunnerAlg().findRunner(rid).flatMap {
         case Some(runner) => Ok(runner.asJson)
-        case None         => NotFound()
+        case None         => NotFound(messages.noSuchRunner(rid))
       }
     }
 
     def handleGetRace(rid: RaceId): Task[Response] = {
       RaceAlg().findRace(rid).flatMap {
         case Some(race) => Ok(race.asJson)
-        case None       => NotFound()
+        case None       => NotFound(messages.noSuchRace(rid))
       }
     }
 
@@ -68,7 +83,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
         case AddRegistration(raceId) =>
           RegistrationAlg().newReg(raceId).flatMap {
             case Some(registration) => Created(registration.asJson)
-            case None               => BadRequest(s"Race $raceId does not exist")
+            case None               => BadRequest(messages.registrationNoSuchRace(raceId))
           }
       }
 
@@ -81,21 +96,18 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
       }
     }
 
-    HttpService {
-      case GET -> Root / "about"                           => handleAbout()
-      case GET -> Root / "runner" / RunnerIdVar(rid)       => handleGetRunner(rid)
-      case GET -> Root / "race" / RaceIdVar(rid)           => handleGetRace(rid)
-      case GET -> Root / "registration" / RaceIdVar(rid)   => handleGetRegistration(rid)
-      case request @ POST -> Root / "registration" / "new" => handleNewRegistration(request)
-      case request @ PUT -> Root / "registration" / "add"  => handleRegistration(request)
-      case request @ POST -> Root / "runner"               => handleAddRunner(request)
-      case request @ POST -> Root / "race"                 => handleAddRace(request)
-    }
+    route
   }
 
 }
 
 object RaceRegistrationService {
+  object messages {
+    def noSuchRunner(id: RunnerId): String = s"No such runner: ${id.value}"
+    def noSuchRace(id: RaceId): String     = s"No such race: ${id.value}"
+    def registrationNoSuchRace(id: RaceId): String =
+      s"Cannot create registration for unknown race: ${id.value}"
+  }
 
   object RunnerIdVar {
     def unapply(str: String): Option[RunnerId] = Some(RunnerId(str))
