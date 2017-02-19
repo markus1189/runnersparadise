@@ -55,7 +55,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
       }
     }
 
-    def handleAbout(): Task[Response] = Ok("This is a race registration service for runners.")
+    def handleAbout(): Task[Response] = Ok(messages.about)
 
     def handleGetRunner(rid: RunnerId): Task[Response] = {
       RunnerAlg().findRunner(rid).flatMap {
@@ -111,7 +111,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleGetRegistration(raceId: RaceId): Task[Response] = {
       RegistrationAlg().findReg(raceId).flatMap {
         case Some(reg) => Ok(reg.asJson)
-        case None      => NotFound(s"No registration exists for race $raceId")
+        case None      => NotFound(messages.registrationNotFound(raceId))
       }
     }
 
@@ -126,7 +126,9 @@ object RaceRegistrationService {
     def noSuchRace(id: RaceId): String     = s"No such race: ${id.value}"
     def registrationNoSuchRace(id: RaceId): String =
       s"Cannot create registration for unknown race: ${id.value}"
-    def raceHasMaxAttendees: String = "No further registrations allowed for this race"
+    val raceHasMaxAttendees: String              = "No further registrations allowed for this race"
+    val about: String                            = "This is a race registration service for runners."
+    def registrationNotFound(id: RaceId): String = s"No registration exists for race ${id.value}"
   }
 
   object RunnerIdVar {
