@@ -9,6 +9,7 @@ import de.codecentric.runnersparadise.algebra.{
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
@@ -120,25 +121,25 @@ object RaceRegistrationService {
   case class AddRunner(firstname: String, lastname: String, nickname: Option[String])
 
   object AddRunner {
-    implicit val decoder: Decoder[AddRunner] = io.circe.generic.semiauto.deriveDecoder
+    implicit val decoder: Decoder[AddRunner] = deriveDecoder
   }
 
   case class AddRace(name: String, maxAttendees: Long)
 
   object AddRace {
-    implicit val decoder: Decoder[AddRace] = io.circe.generic.semiauto.deriveDecoder
+    implicit val decoder: Decoder[AddRace] = deriveDecoder
   }
 
   case class Register(runner: RunnerId, race: RaceId)
 
   object Register {
-    implicit val decoder: Decoder[Register] = io.circe.generic.semiauto.deriveDecoder
+    implicit val decoder: Decoder[Register] = deriveDecoder
   }
 
   case class AddRegistration(race: RaceId)
 
   object AddRegistration {
-    implicit val decoder: Decoder[AddRegistration] = io.circe.generic.semiauto.deriveDecoder
+    implicit val decoder: Decoder[AddRegistration] = deriveDecoder
   }
 
 }
