@@ -33,22 +33,25 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
 
   def service: HttpService = {
     def route = HttpService {
-      case GET -> Root / "about"                           => handleAbout()
-      case GET -> Root / "runner" / RunnerIdVar(rid)       => handleGetRunner(rid)
-      case GET -> Root / "race" / RaceIdVar(rid)           => handleGetRace(rid)
-      case GET -> Root / "registration" / RaceIdVar(rid)   => handleGetRegistration(rid)
-      case request @ POST -> Root / "registration" / "new" => handleNewRegistration(request)
-      case request @ PUT -> Root / "registration" / "add"  => handleRegistration(request)
-      case request @ POST -> Root / "runner"               => handleAddRunner(request)
-      case request @ POST -> Root / "race"                 => handleAddRace(request)
+      case GET -> Root / "about"                         => handleAbout()
+      case GET -> Root / "runner" / RunnerIdVar(rid)     => handleGetRunner(rid)
+      case GET -> Root / "race" / RaceIdVar(rid)         => handleGetRace(rid)
+      case GET -> Root / "registration" / RaceIdVar(rid) => handleGetRegistration(rid)
+      case req @ POST -> Root / "registration"           => handleNewRegistration(req)
+      case req @ PUT -> Root / "registration"            => handleRegistration(req)
+      case req @ POST -> Root / "runner"                 => handleAddRunner(req)
+      case req @ POST -> Root / "race"                   => handleAddRace(req)
     }
 
     def handleAddRace(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRace], strict = true) { r =>
         val raceId = RaceId.random()
         val race   = Race(raceId, r.name, r.maxAttendees)
-        RaceAlg().saveRace(race) *> Created(race.asJson)
-          .putHeaders(Location(Uri.fromString(s"/race/${raceId.value}").getOrElse(???)))
+        RaceAlg().saveRace(race) *>
+          Uri
+            .fromString(s"/race/${raceId.value}")
+            .map(uri => Created(race.asJson).putHeaders(Location(uri)))
+            .getOrElse(InternalServerError())
       }
     }
 
@@ -71,8 +74,11 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleAddRunner(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRunner], strict = true) { r =>
         val runner = RunnerFunctions.createRunner(r)
-        RunnerAlg().saveRunner(runner) *> Created(runner.asJson)
-          .putHeaders(Location(Uri.fromString(s"/runner/${runner.id.value}").getOrElse(???)))
+        RunnerAlg().saveRunner(runner) *>
+          Uri
+            .fromString(s"/runner/${runner.id.value}")
+            .map(uri => Created(runner.asJson).putHeaders(Location(uri)))
+            .getOrElse(InternalServerError())
       }
     }
 
