@@ -5,6 +5,7 @@ import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.fixtures.{RaceFixtures, RunnerFixtures}
 import de.codecentric.runnersparadise.interpreters.InMemoryInterpreters
 import io.circe.Json
+import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
 
@@ -89,7 +90,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
     "complain if trying to create a registration for non existant race" in new WithFixtures {
       val randomRaceId = RaceId.random()
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration/new"))
+      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
         .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value)))
         .run
 
@@ -101,7 +102,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
     }
 
     "create new registrations for an existing race" in new WithFixtures {
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration/new"))
+      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
         .withBody(Json.obj("race" -> Json.fromString(race.id.value)))
         .run
 
@@ -112,6 +113,32 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       result.race.id should ===(race.id)
 
       interpreters.regStore.get(race.id).value should ===(result)
+    }
+
+    "fail to create registration if race is unknown" in new WithFixtures {
+      val randomRaceId = RaceId.random()
+
+      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
+        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value)))
+        .run
+
+      val resp = performRequest(req)
+      resp.status should ===(Status.BadRequest)
+
+      val result = resp.as(EntityDecoder.text).run
+      result should ===(RaceRegistrationService.messages.registrationNoSuchRace(randomRaceId))
+    }
+
+    "creates a new registration for an existing race" in new WithFixtures {
+      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
+        .withBody(Json.obj("race" -> Json.fromString(race.id.value)))
+        .run
+
+      val resp = performRequest(req)
+      resp.status should ===(Status.Created)
+
+      val result = resp.as(jsonOf[Registration]).run
+      result should ===(Registration(race, Set()))
     }
   }
 
