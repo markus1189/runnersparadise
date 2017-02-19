@@ -1,5 +1,11 @@
 package de.codecentric.runnersparadise.api
 
+import de.codecentric.runnersparadise.Errors.RegistrationError.{
+  RaceHasMaxAttendees,
+  RegistrationNotFound,
+  RegistrationSaveFailed,
+  RunnerNotFound
+}
 import de.codecentric.runnersparadise.algebra.{
   RaceAlg,
   RegistrationAlg,
@@ -74,7 +80,13 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
       request.decodeWith(jsonOf[Register], strict = true) { registration =>
         Programs.register[Task](registration.runner, registration.race).flatMap {
           case Right(reg) => Ok(reg.asJson)
-          case Left(msg)  => BadRequest(msg)
+          case Left(e) =>
+            e match {
+              case RunnerNotFound(id)        => BadRequest(messages.noSuchRunner(id))
+              case RegistrationNotFound(id)  => BadRequest(messages.registrationNoSuchRace(id))
+              case RegistrationSaveFailed(_) => InternalServerError()
+              case RaceHasMaxAttendees       => BadRequest(messages.raceHasMaxAttendees)
+            }
         }
       }
     }
@@ -108,6 +120,7 @@ object RaceRegistrationService {
     def noSuchRace(id: RaceId): String     = s"No such race: ${id.value}"
     def registrationNoSuchRace(id: RaceId): String =
       s"Cannot create registration for unknown race: ${id.value}"
+    def raceHasMaxAttendees: String = "No further registrations allowed for this race"
   }
 
   object RunnerIdVar {
