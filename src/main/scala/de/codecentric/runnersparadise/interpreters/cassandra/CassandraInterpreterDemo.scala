@@ -7,5 +7,5 @@ import scalaz.concurrent.Task
 object CassandraInterpreterDemo extends App {
   val interpreters = new CassandraInterpreter
   import interpreters._
-  Programs.program[Task].run
+  Programs.demo[Task].run
 }

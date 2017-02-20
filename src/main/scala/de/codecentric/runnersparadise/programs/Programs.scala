@@ -29,7 +29,7 @@ trait Programs {
     } yield newReg
   }.run.map(_.toEither)
 
-  def program[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg]: F[Unit] = {
+  def demo[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg]: F[Unit] = {
     val race = Race(RaceId.random(), "The Grand Challenge", 5)
     println(race.id)
     val runners =
