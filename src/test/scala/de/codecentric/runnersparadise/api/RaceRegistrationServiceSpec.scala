@@ -5,7 +5,6 @@ import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.fixtures.{RaceFixtures, RunnerFixtures}
 import de.codecentric.runnersparadise.interpreters.InMemoryInterpreters
 import io.circe.Json
-import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
 
@@ -143,9 +142,9 @@ class RaceRegistrationServiceSpec extends UnitSpec {
   }
 
   trait WithFixtures {
-    val runner       = RunnerFixtures.harryDesden
-    val race         = RaceFixtures.runnersParadise
-    val interpreters = new InMemoryInterpreters
+    val runner              = RunnerFixtures.harryDesden
+    val race                = RaceFixtures.runnersParadise
+    val interpreters        = new InMemoryInterpreters
     import interpreters._
     val registrationService = new RaceRegistrationService
 
