@@ -1,5 +1,7 @@
 package de.codecentric.runnersparadise.api
 
+import java.util.UUID
+
 import de.codecentric.runnersparadise.Errors.RegistrationError.{
   RaceHasMaxAttendees,
   RegistrationNotFound,
@@ -22,6 +24,8 @@ import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
 
+import scala.util.Try
+import scalaz.\/
 import scalaz.concurrent.Task
 import scalaz.syntax.apply._
 
@@ -132,11 +136,13 @@ object RaceRegistrationService {
   }
 
   object RunnerIdVar {
-    def unapply(str: String): Option[RunnerId] = Some(RunnerId(str))
+    def unapply(str: String): Option[RunnerId] =
+      \/.fromTryCatchNonFatal(RunnerId(UUID.fromString(str))).toOption
   }
 
   object RaceIdVar {
-    def unapply(str: String): Option[RaceId] = Some(RaceId(str))
+    def unapply(str: String): Option[RaceId] =
+      \/.fromTryCatchNonFatal(RaceId(UUID.fromString(str))).toOption
   }
 
   case class AddRunner(firstname: String, lastname: String, nickname: Option[String])

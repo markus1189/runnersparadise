@@ -1,6 +1,11 @@
 package de
 
-import scalaz.syntax.ToEqualOps
+import java.util.UUID
+
+import cats.Functor.ToFunctorOps
+
+import scalaz.Show
+import scalaz.syntax.{ToEitherOps, ToEqualOps, ToShowOps}
 
 package object codecentric extends ScalazSyntax {
   type Traversable[+A] = scala.collection.immutable.Traversable[A]
@@ -20,4 +25,6 @@ package object codecentric extends ScalazSyntax {
   val IndexedSeq = scala.collection.immutable.IndexedSeq
 }
 
-trait ScalazSyntax extends ToEqualOps
+trait ScalazSyntax extends ToEqualOps with ToShowOps with ToEitherOps with ToFunctorOps {
+  implicit val uuidShow: Show[UUID] = Show.showFromToString
+}

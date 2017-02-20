@@ -91,7 +91,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
     "complain if trying to create a registration for non existant race" in new WithFixtures {
       val randomRaceId = RaceId.random()
       val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value)))
+        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value.shows)))
         .run
 
       val resp = performRequest(req)
@@ -103,7 +103,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
     "create new registrations for an existing race" in new WithFixtures {
       val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(race.id.value)))
+        .withBody(Json.obj("race" -> Json.fromString(race.id.value.shows)))
         .run
 
       val resp = performRequest(req)
@@ -119,7 +119,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       val randomRaceId = RaceId.random()
 
       val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value)))
+        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value.shows)))
         .run
 
       val resp = performRequest(req)
@@ -131,7 +131,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
     "creates a new registration for an existing race" in new WithFixtures {
       val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(race.id.value)))
+        .withBody(Json.obj("race" -> Json.fromString(race.id.value.shows)))
         .run
 
       val resp = performRequest(req)

@@ -1,6 +1,7 @@
 package de.codecentric
 package runnersparadise
 
+import de.codecentric.runnersparadise.api.RaceRegistrationService
 import de.codecentric.runnersparadise.interpreters.InMemory
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.{Server, ServerApp}
