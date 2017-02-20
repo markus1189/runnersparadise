@@ -6,7 +6,7 @@ import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerA
 
 import scalaz.concurrent.Task
 
-object InMemory extends {
+class InMemory extends {
   var runnerStore: Map[RunnerId, Runner]  = Map()
   var raceStore: Map[RaceId, Race]        = Map()
   var regStore: Map[RaceId, Registration] = Map()
