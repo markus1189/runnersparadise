@@ -117,6 +117,23 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       val result = resp.as(jsonOf[Registration]).run
       result should ===(Registration(race, Set(newRunner, runner)))
     }
+
+    "reject registration if there are no places left" in new WithFixtures {
+      val newRace = RaceFixtures.create(name = "Very Exclusive Race", maxAttendees = 0)
+      interpreters.races.saveRace(newRace)
+
+      val req = Request(method = Method.PUT, uri = Uri(path = "/registration"))
+        .withBody(Json.obj("runner" -> Json.fromString(runner.id.value.shows),
+                           "race"   -> Json.fromString(newRace.id.value.shows)))
+        .run
+
+      val resp = performRequest(req)
+      resp.status should ===(Status.BadRequest)
+
+      val result = resp.as(EntityDecoder.text).run
+      result should ===(RaceRegistrationService.messages.raceHasMaxAttendees)
+    }
+
   }
 
   trait WithFixtures {
