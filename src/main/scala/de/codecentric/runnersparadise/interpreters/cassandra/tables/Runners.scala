@@ -36,4 +36,8 @@ abstract class Runners extends CassandraTable[Runners, Runner] with RootConnecto
       }
     }
   }
+
+  override def fromRow(r: Row): Runner = {
+    Runner(RunnerId(id(r)), firstname(r), lastname(r), nickname(r))
+  }
 }

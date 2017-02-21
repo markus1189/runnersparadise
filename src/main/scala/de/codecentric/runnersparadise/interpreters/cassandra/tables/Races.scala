@@ -30,4 +30,8 @@ abstract class Races extends CassandraTable[Races, Race] with RootConnector {
       case Failure(e)  => k(e.left)
     }
   }
+
+  override def fromRow(r: Row): Race = {
+    Race(RaceId(id(r)), name(r), maxAttendees(r))
+  }
 }
