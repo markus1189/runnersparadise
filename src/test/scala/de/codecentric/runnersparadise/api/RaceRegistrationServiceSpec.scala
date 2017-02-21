@@ -86,12 +86,43 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
       interpreters.raceStore.get(result.id).value should ===(result)
     }
+
+    "create a registration for the first attendee" in new WithFixtures {
+      val req = Request(method = Method.PUT, uri = Uri(path = "/registration"))
+        .withBody(Json.obj("runner" -> Json.fromString(runner.id.value.shows),
+                           "race"   -> Json.fromString(race.id.value.shows)))
+        .run
+
+      val resp = performRequest(req)
+      resp.status should ===(Status.Created)
+
+      val result = resp.as(jsonOf[Registration]).run
+      result.race should ===(race)
+      result.attendees.headOption.value should ===(runner)
+    }
+
+    "update an existing registration for another attendee if enough free places left" in new WithFixtures {
+      val newRunner = RunnerFixtures.create(firstname = "New Kid", lastname = "On the block")
+      interpreters.registrations.saveReg(Registration(race, Set(runner)))
+      interpreters.runners.saveRunner(newRunner)
+
+      val req = Request(method = Method.PUT, uri = Uri(path = "/registration"))
+        .withBody(Json.obj("runner" -> Json.fromString(newRunner.id.value.shows),
+                           "race"   -> Json.fromString(race.id.value.shows)))
+        .run
+
+      val resp = performRequest(req)
+      resp.status should ===(Status.Ok)
+
+      val result = resp.as(jsonOf[Registration]).run
+      result should ===(Registration(race, Set(newRunner, runner)))
+    }
   }
 
   trait WithFixtures {
-    val runner              = RunnerFixtures.harryDesden
-    val race                = RaceFixtures.runnersParadise
-    val interpreters        = new InMemoryInterpreters
+    val runner       = RunnerFixtures.harryDesden
+    val race         = RaceFixtures.runnersParadise
+    val interpreters = new InMemoryInterpreters
     import interpreters._
     val registrationService = new RaceRegistrationService
 

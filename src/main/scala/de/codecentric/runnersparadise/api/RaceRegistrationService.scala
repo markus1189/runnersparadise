@@ -3,7 +3,12 @@ package de.codecentric.runnersparadise.api
 import java.util.UUID
 
 import de.codecentric.runnersparadise.Errors.RegistrationError._
-import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
+import de.codecentric.runnersparadise.algebra.{
+  RaceAlg,
+  RegistrationAlg,
+  RunnerAlg,
+  RunnerFunctions
+}
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
@@ -14,7 +19,6 @@ import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
 
-import scala.util.Try
 import scalaz.\/
 import scalaz.concurrent.Task
 import scalaz.syntax.apply._
@@ -78,7 +82,15 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleRegistration(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[Register], strict = true) { registration =>
         Programs.register[Task](registration.runner, registration.race).flatMap {
-          case Right(reg) => Ok(reg.asJson)
+          case Right(reg) =>
+            if (reg.attendees.size == 1) {
+              Uri
+                .fromString(s"/registration/${reg.race.id.value}")
+                .map(uri => Created(reg.asJson).putHeaders(Location(uri)))
+                .getOrElse(InternalServerError())
+            } else {
+              Ok(reg.asJson)
+            }
           case Left(e) =>
             e match {
               case RaceNotFound(id)          => BadRequest(messages.registrationNoSuchRace(id))
