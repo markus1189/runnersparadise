@@ -15,15 +15,6 @@ curl -i -XPOST \
      localhost:8080/race
 #+END_SRC
 
-#+NAME: Initialize a new registration
-#+BEGIN_SRC sh
-curl -i -XPOST \
-     -H 'Content-Type: application/json' \
-     -d "$(jo race=RACE)" \
-     localhost:8080/registration/new
-
-#+END_SRC
-
 #+NAME: Create new runner
 #+BEGIN_SRC sh
 curl -i -XPOST \
@@ -36,6 +27,6 @@ curl -i -XPOST \
 #+BEGIN_SRC sh
 curl -i -XPUT \
      -H 'Content-Type: application/json' \
-     -d  "$(jo runner=RUNNER race=RACE)" \
-     localhost:8080/registration/add
+     -d  "$(jo runner=ea8c93ea-9745-4fb7-97e3-f0f689d5404a race=1273d991-736a-464e-b683-b56008997dd6)" \
+     localhost:8080/registration
 #+END_SRC
