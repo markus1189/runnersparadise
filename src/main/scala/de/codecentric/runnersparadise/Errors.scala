@@ -7,6 +7,7 @@ object Errors {
   object RegistrationError {
     case class RunnerNotFound(id: RunnerId)                 extends RegistrationError
     case class RegistrationNotFound(id: RaceId)             extends RegistrationError
+    case class RaceNotFound(id: RaceId)                     extends RegistrationError
     case class RegistrationSaveFailed(e: Option[Throwable]) extends RegistrationError
     case object RaceHasMaxAttendees                         extends RegistrationError
   }

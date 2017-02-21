@@ -23,16 +23,15 @@ class CassandraInterpreter {
   }
 
   implicit val registrations = new RegistrationAlg[Task] {
-    override def findReg(id: RaceId): Task[Option[Registration]] = LocalDatabase.findRegistration(id)
+    override def findReg(id: RaceId): Task[Option[Registration]] = {
+      LocalDatabase.findRegistration(id).map { x =>
+        println(x)
+        x
+      }
+    }
 
-    override def saveReg(reg: Registration): Task[Unit] = LocalDatabase.registrations.save(reg)
-
-    override def newReg(raceId: RaceId): Task[Option[Registration]] = {
-      for {
-        race <- OptionT(LocalDatabase.races.find(raceId))
-        reg = Registration(race, Set())
-        _ <- OptionT(saveReg(reg).map(Option(_)))
-      } yield reg
-    }.run
+    override def saveReg(reg: Registration): Task[Unit] = {
+      LocalDatabase.registrations.save(reg)
+    }
   }
 }

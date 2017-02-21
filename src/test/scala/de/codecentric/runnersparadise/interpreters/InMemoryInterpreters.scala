@@ -40,13 +40,5 @@ class InMemoryInterpreters extends {
       regStore = regStore.updated(reg.race.id, reg)
       Task(())
     }
-
-    override def newReg(raceId: RaceId): Task[Option[Registration]] = {
-      Task(raceStore.get(raceId).map { race =>
-        val reg = Registration(race, Set())
-        regStore = regStore.updated(reg.race.id, reg)
-        reg
-      })
-    }
   }
 }

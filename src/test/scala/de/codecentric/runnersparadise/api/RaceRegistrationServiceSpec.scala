@@ -86,59 +86,6 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
       interpreters.raceStore.get(result.id).value should ===(result)
     }
-
-    "complain if trying to create a registration for non existant race" in new WithFixtures {
-      val randomRaceId = RaceId.random()
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value.shows)))
-        .run
-
-      val resp = performRequest(req)
-      resp.status should ===(Status.BadRequest)
-
-      val result = resp.as(EntityDecoder.text).run
-      result should ===(RaceRegistrationService.messages.registrationNoSuchRace(randomRaceId))
-    }
-
-    "create new registrations for an existing race" in new WithFixtures {
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(race.id.value.shows)))
-        .run
-
-      val resp = performRequest(req)
-      resp.status should ===(Status.Created)
-
-      val result = resp.as(jsonOf[Registration]).run
-      result.race.id should ===(race.id)
-
-      interpreters.regStore.get(race.id).value should ===(result)
-    }
-
-    "fail to create registration if race is unknown" in new WithFixtures {
-      val randomRaceId = RaceId.random()
-
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(randomRaceId.value.shows)))
-        .run
-
-      val resp = performRequest(req)
-      resp.status should ===(Status.BadRequest)
-
-      val result = resp.as(EntityDecoder.text).run
-      result should ===(RaceRegistrationService.messages.registrationNoSuchRace(randomRaceId))
-    }
-
-    "creates a new registration for an existing race" in new WithFixtures {
-      val req = Request(method = Method.POST, uri = Uri(path = "/registration"))
-        .withBody(Json.obj("race" -> Json.fromString(race.id.value.shows)))
-        .run
-
-      val resp = performRequest(req)
-      resp.status should ===(Status.Created)
-
-      val result = resp.as(jsonOf[Registration]).run
-      result should ===(Registration(race, Set()))
-    }
   }
 
   trait WithFixtures {

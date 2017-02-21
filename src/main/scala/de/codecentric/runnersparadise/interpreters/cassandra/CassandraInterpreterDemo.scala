@@ -8,4 +8,6 @@ object CassandraInterpreterDemo extends App {
   val interpreters = new CassandraInterpreter
   import interpreters._
   Programs.demo[Task].run
+
+  LocalDatabase.shutdown()
 }

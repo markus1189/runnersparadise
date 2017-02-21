@@ -2,18 +2,8 @@ package de.codecentric.runnersparadise.api
 
 import java.util.UUID
 
-import de.codecentric.runnersparadise.Errors.RegistrationError.{
-  RaceHasMaxAttendees,
-  RegistrationNotFound,
-  RegistrationSaveFailed,
-  RunnerNotFound
-}
-import de.codecentric.runnersparadise.algebra.{
-  RaceAlg,
-  RegistrationAlg,
-  RunnerAlg,
-  RunnerFunctions
-}
+import de.codecentric.runnersparadise.Errors.RegistrationError._
+import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
@@ -41,7 +31,6 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
       case GET -> Root / "runner" / RunnerIdVar(rid)     => handleGetRunner(rid)
       case GET -> Root / "race" / RaceIdVar(rid)         => handleGetRace(rid)
       case GET -> Root / "registration" / RaceIdVar(rid) => handleGetRegistration(rid)
-      case req @ POST -> Root / "registration"           => handleNewRegistration(req)
       case req @ PUT -> Root / "registration"            => handleRegistration(req)
       case req @ POST -> Root / "runner"                 => handleAddRunner(req)
       case req @ POST -> Root / "race"                   => handleAddRace(req)
@@ -92,6 +81,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
           case Right(reg) => Ok(reg.asJson)
           case Left(e) =>
             e match {
+              case RaceNotFound(id)          => BadRequest(messages.registrationNoSuchRace(id))
               case RunnerNotFound(id)        => BadRequest(messages.noSuchRunner(id))
               case RegistrationNotFound(id)  => BadRequest(messages.registrationNoSuchRace(id))
               case RegistrationSaveFailed(_) => InternalServerError()
@@ -99,17 +89,6 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
             }
         }
       }
-    }
-
-    def handleNewRegistration(request: Request): Task[Response] = {
-      request.decodeWith(jsonOf[AddRegistration], strict = true) {
-        case AddRegistration(raceId) =>
-          RegistrationAlg().newReg(raceId).flatMap {
-            case Some(registration) => Created(registration.asJson)
-            case None               => BadRequest(messages.registrationNoSuchRace(raceId))
-          }
-      }
-
     }
 
     def handleGetRegistration(raceId: RaceId): Task[Response] = {
