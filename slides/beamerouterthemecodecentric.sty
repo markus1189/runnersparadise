@@ -1,0 +1,18 @@
+\defbeamertemplate*{footline}{}
+{
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+      \usebeamerfont{author in head/foot}\insertshortauthor\expandafter\beamer@ifempty\expandafter{\beamer@shortinstitute}{}{~~(\insertshortinstitute)}
+      \hfill{}
+      \usebeamerfont{title in head/foot}\insertshorttitle{}
+      \hfill{}
+      slide \insertframenumber{}
+    \end{beamercolorbox}%
+  }%
+}
+
+\setbeamertemplate{navigation symbols}{}
+
+\mode%
+<all>
