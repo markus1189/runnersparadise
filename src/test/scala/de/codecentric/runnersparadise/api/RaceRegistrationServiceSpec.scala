@@ -3,10 +3,13 @@ package runnersparadise.api
 
 import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.fixtures.{RaceFixtures, RunnerFixtures}
-import de.codecentric.runnersparadise.interpreters.InMemoryInterpreters
+import de.codecentric.runnersparadise.interpreters.InMemory
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
+
+import scalaz.concurrent.Task
+import scalaz.{Id, ~>}
 
 class RaceRegistrationServiceSpec extends UnitSpec {
   "RaceRegistrationService" should {
@@ -139,9 +142,11 @@ class RaceRegistrationServiceSpec extends UnitSpec {
   trait WithFixtures {
     val runner       = RunnerFixtures.harryDesden
     val race         = RaceFixtures.runnersParadise
-    val interpreters = new InMemoryInterpreters
+    val interpreters = new InMemory
     import interpreters._
-    val registrationService = new RaceRegistrationService
+    val registrationService = new RaceRegistrationService(new (Id.Id ~> Task) {
+      override def apply[A](fa: A): Task[A] = Task.delay(fa)
+    })
 
     interpreters.runners.saveRunner(runner)
     interpreters.races.saveRace(race)

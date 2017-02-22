@@ -19,13 +19,11 @@ import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
 
-import scalaz.\/
+import scalaz.{Monad, \/, ~>}
 import scalaz.concurrent.Task
 import scalaz.syntax.apply._
 
-class RaceRegistrationService(implicit A: RunnerAlg[Task],
-                              B: RaceAlg[Task],
-                              C: RegistrationAlg[Task]) {
+class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](toTask: F ~> Task) {
 
   import RaceRegistrationService._
 
@@ -44,7 +42,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
       request.decodeWith(jsonOf[AddRace], strict = true) { r =>
         val raceId = RaceId.random()
         val race   = Race(raceId, r.name, r.maxAttendees)
-        RaceAlg().saveRace(race) *>
+        toTask(RaceAlg().saveRace(race)) *>
           Uri
             .fromString(s"/race/${raceId.value}")
             .map(uri => Created(race.asJson).putHeaders(Location(uri)))
@@ -55,14 +53,14 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleAbout(): Task[Response] = Ok(messages.about)
 
     def handleGetRunner(rid: RunnerId): Task[Response] = {
-      RunnerAlg().findRunner(rid).flatMap {
+      toTask(RunnerAlg().findRunner(rid)).flatMap {
         case Some(runner) => Ok(runner.asJson)
         case None         => NotFound(messages.noSuchRunner(rid))
       }
     }
 
     def handleGetRace(rid: RaceId): Task[Response] = {
-      RaceAlg().findRace(rid).flatMap {
+      toTask(RaceAlg().findRace(rid)).flatMap {
         case Some(race) => Ok(race.asJson)
         case None       => NotFound(messages.noSuchRace(rid))
       }
@@ -71,7 +69,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     def handleAddRunner(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRunner], strict = true) { r =>
         val runner = RunnerFunctions.createRunner(r)
-        RunnerAlg().saveRunner(runner) *>
+        toTask(RunnerAlg().saveRunner(runner)) *>
           Uri
             .fromString(s"/runner/${runner.id.value}")
             .map(uri => Created(runner.asJson).putHeaders(Location(uri)))
@@ -81,7 +79,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
 
     def handleRegistration(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[Register], strict = true) { registration =>
-        Programs.register[Task](registration.runner, registration.race).flatMap {
+        toTask(Programs.register[F](registration.runner, registration.race)).flatMap {
           case Right(reg) =>
             if (reg.attendees.size == 1) {
               Uri
@@ -104,7 +102,7 @@ class RaceRegistrationService(implicit A: RunnerAlg[Task],
     }
 
     def handleGetRegistration(raceId: RaceId): Task[Response] = {
-      RegistrationAlg().findReg(raceId).flatMap {
+      toTask(RegistrationAlg().findReg(raceId)).flatMap {
         case Some(reg) => Ok(reg.asJson)
         case None      => NotFound(messages.registrationNotFound(raceId))
       }
