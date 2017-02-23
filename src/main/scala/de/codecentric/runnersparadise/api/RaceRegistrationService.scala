@@ -19,9 +19,9 @@ import org.http4s.circe._
 import org.http4s.dsl._
 import org.http4s.headers.Location
 
-import scalaz.{Monad, \/, ~>}
 import scalaz.concurrent.Task
 import scalaz.syntax.apply._
+import scalaz.{Monad, \/, ~>}
 
 class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](toTask: F ~> Task) {
 

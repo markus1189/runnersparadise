@@ -12,14 +12,6 @@ trait RunnerAlg[F[_]] {
 
 object RunnerAlg {
   def apply[F[_]: RunnerAlg](): RunnerAlg[F] = implicitly
-
-  implicit def tuple[F[_],G[_]](implicit F: RunnerAlg[F], G: RunnerAlg[G]) = new RunnerAlg[Lambda[A => (F[A],G[A])]] {
-
-    override def saveRunner(runner: Runner): (F[Unit], G[Unit]) = (F.saveRunner(runner), G.saveRunner(runner))
-
-    override def findRunner(id: RunnerId): (F[Option[Runner]], G[Option[Runner]]) = (F.findRunner(id), G.findRunner(id))
-
-  }
 }
 
 trait RunnerFunctions {

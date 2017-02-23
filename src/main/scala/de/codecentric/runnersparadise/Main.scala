@@ -1,14 +1,16 @@
 package de.codecentric
 package runnersparadise
 
+import de.codecentric.runnersparadise.algebra.RunnerAlg
 import de.codecentric.runnersparadise.api.RaceRegistrationService
-import de.codecentric.runnersparadise.interpreters.InMemory
+import de.codecentric.runnersparadise.interpreters.{InMemory, Logger}
 import de.codecentric.runnersparadise.interpreters.cassandra.CassandraInterpreter
+import de.codecentric.runnersparadise.util.Product
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.{Server, ServerApp}
 
-import scalaz.{Id, NaturalTransformation, ~>}
 import scalaz.concurrent.Task
+import scalaz.{Id, NaturalTransformation, ~>}
 
 object MainInMemory extends ServerApp {
   val interpreter = new InMemory
