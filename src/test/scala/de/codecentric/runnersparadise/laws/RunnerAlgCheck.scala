@@ -5,7 +5,11 @@ import de.codecentric.UnitSpec
 import de.codecentric.runnersparadise.algebra.RunnerAlg
 import de.codecentric.runnersparadise.domain.Runner
 import de.codecentric.runnersparadise.interpreters.InMemory
-import de.codecentric.runnersparadise.interpreters.cassandra.{CassandraInterpreter, Keyspaces, RunnersParadiseDb}
+import de.codecentric.runnersparadise.interpreters.cassandra.{
+  CassandraInterpreter,
+  Keyspaces,
+  RunnersParadiseDb
+}
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.prop.PropertyChecks
@@ -32,6 +36,14 @@ abstract class RunnerAlgCheck[F[_]: Applicative](name: String)
           runner)
       }
     }
+
+    "be idempotent wrt save" in {
+      forAll { (runner: Runner) =>
+        run(
+          Applicative.apply[F].replicateM_(2, RunnerAlg().saveRunner(runner)) *> RunnerAlg()
+            .findRunner(runner.id))
+      }
+    }
   }
 }
 
@@ -46,12 +58,12 @@ class RunnerAlgInMemoryCheck extends RunnerAlgCheck[Id.Id]("InMemory") {
 
 class RunnerAlgCassandraCheck extends RunnerAlgCheck[Task]("Cassandra") with BeforeAndAfterAll {
   implicit val ec = ExecutionContext.fromExecutor(null)
-  
+
   EmbeddedCassandraServerHelper.startEmbeddedCassandra()
   val db = new RunnersParadiseDb(Keyspaces.embedded)
   db.create()
   implicit val session = db.session
-  
+
   Await.result(db.runners.autocreate(KeySpace(Keyspaces.embedded.name)).future(), 30.seconds)
 
   def run[A](x: Task[A]): A = x.run
