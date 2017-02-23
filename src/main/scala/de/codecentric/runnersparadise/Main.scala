@@ -1,11 +1,9 @@
 package de.codecentric
 package runnersparadise
 
-import de.codecentric.runnersparadise.algebra.RunnerAlg
 import de.codecentric.runnersparadise.api.RaceRegistrationService
-import de.codecentric.runnersparadise.interpreters.{InMemory, Logger}
-import de.codecentric.runnersparadise.interpreters.cassandra.CassandraInterpreter
-import de.codecentric.runnersparadise.util.Product
+import de.codecentric.runnersparadise.interpreters.InMemory
+import de.codecentric.runnersparadise.interpreters.cassandra.{CassandraInterpreter, RunnersParadiseDb}
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.{Server, ServerApp}
 
@@ -25,7 +23,7 @@ object MainInMemory extends ServerApp {
 }
 
 object MainCassandra extends ServerApp {
-  val interpreter = new CassandraInterpreter
+  val interpreter = new CassandraInterpreter(RunnersParadiseDb)
   import interpreter._
 
   val srv: RaceRegistrationService[Task] = new RaceRegistrationService(NaturalTransformation.refl)

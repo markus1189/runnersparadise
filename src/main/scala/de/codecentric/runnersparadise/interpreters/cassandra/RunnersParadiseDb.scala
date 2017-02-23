@@ -12,15 +12,13 @@ import scalaz.std.option._
 import scalaz.std.scalaFuture._
 import scalaz.syntax.traverse._
 
-class LocalDatabase(override val connector: CassandraConnection)
-    extends Database[LocalDatabase](connector) {
+class RunnersParadiseDb(override val connector: CassandraConnection)
+    extends Database[RunnersParadiseDb](connector) {
 
   lazy val runners: Runners             = new Runners with connector.Connector
   lazy val races: Races                 = new Races with connector.Connector
   lazy val registrations: Registrations = new Registrations with connector.Connector
-}
 
-object LocalDatabase extends LocalDatabase(Keyspaces.local) {
   def findRegistration(raceId: RaceId): Task[Option[Registration]] = {
     for {
       ids     <- registrations.find(raceId)
@@ -29,15 +27,17 @@ object LocalDatabase extends LocalDatabase(Keyspaces.local) {
     } yield {
       race.map(Registration(_, runners.to[Set]))
     }
-
   }
+}
+
+object RunnersParadiseDb extends RunnersParadiseDb(Keyspaces.local) {
   def main(args: Array[String]): Unit = {
-    LocalDatabase.create()
+    RunnersParadiseDb.create()
 
     List(
-      LocalDatabase.runners.create.ifNotExists().future(),
-      LocalDatabase.races.create.ifNotExists().future(),
-      LocalDatabase.registrations.create.ifNotExists().future()
+      RunnersParadiseDb.runners.create.ifNotExists().future(),
+      RunnersParadiseDb.races.create.ifNotExists().future(),
+      RunnersParadiseDb.registrations.create.ifNotExists().future()
     ).sequence_.onComplete(_ => shutdown())
   }
 }
