@@ -12,6 +12,8 @@
 
 \title{Functional Web Services}
 
+\hypersetup{colorlinks,linkcolor=beamer@ccblue,urlcolor=links}
+
 \begin{document}
 {
   \usebackgroundtemplate{\includegraphics[width=\paperwidth,height=\paperheight]{background.png}}
@@ -19,10 +21,6 @@
     \titlepage{}
   \end{frame}
 }
-
-\begin{frame}
-  \tableofcontents
-\end{frame}
 
 \section{Intro}
 
@@ -34,7 +32,9 @@
 \end{frame}
 
 \begin{frame}
-  \includegraphics[width=0.8\paperwidth]{pics/pinkybrain.jpg}
+  \begin{center}
+    \includegraphics[width=0.7\paperwidth]{pics/pinkybrain.jpg}
+  \end{center}
 \end{frame}
 
 \begin{frame}
@@ -48,13 +48,41 @@
 \end{frame}
 
 \begin{frame}{http4s}
-  \begin{block}{}
+  \begin{block}{What is \hyperlink{http://http4s.org/}{http4}}
     A typeful, purely functional, streaming library for HTTP
     clients and servers in Scala.
   \end{block}
   \begin{itemize}
-  \item currently: \texttt{scalaz-stream} and \texttt{scalaz}
-  \item in progress: \texttt{cats} and \texttt{fs2}
+  \item typeful \textemdash{} self-documentation and compile-time verification
+  \item purely functional \textemdash{} promote composability and reasoning
+  \item streaming \textemdash{} large payloads in constant space and websockets
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Typeclasses need laws}
+  \begin{itemize}
+  \item<1-> typeclasses should \textit{always} come with laws
+  \item<1-> what about \texttt{RunnerAlg}?
+  \end{itemize}
+\begin{minted}{scala}
+trait RunnerAlg[F[_]] {
+  def saveRunner(runner: Runner): F[Unit]
+  def findRunner(id: RunnerId): F[Option[Runner]]
+}
+\end{minted}
+  \begin{itemize}
+  \item<2-> \texttt{saveRunner} $\circ{}$ \texttt{saveRunner}
+  \item<2-> \texttt{findRunner} $\circ{}$ \texttt{findRunner}
+  \item<2-> \texttt{findRunner} $\circ{}$ \texttt{saveRunner}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Testing laws}
+  \begin{itemize}
+  \item we can formulate those laws using \texttt{ScalaCheck}
+  \item once for the typeclass, should hold for all instances
   \end{itemize}
 \end{frame}
 
