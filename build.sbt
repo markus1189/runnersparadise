@@ -2,6 +2,7 @@ lazy val libDeps = {
   val http4sVersion  = "0.15.3"
   val circeVersion   = "0.6.1"
   val phantomVersion = "2.1.3"
+  val logbackVersion = "1.2.1"
 
   Seq(
     "org.http4s"     %% "http4s-dsl"          % http4sVersion,
@@ -9,7 +10,8 @@ lazy val libDeps = {
     "org.http4s"     %% "http4s-blaze-client" % http4sVersion,
     "org.http4s"     %% "http4s-circe"        % http4sVersion,
     "io.circe"       %% "circe-generic"       % circeVersion,
-    "com.outworkers" %% "phantom-dsl"         % phantomVersion
+    "com.outworkers" %% "phantom-dsl"         % phantomVersion,
+    "ch.qos.logback" % "logback-classic"      % logbackVersion
   )
 }
 
