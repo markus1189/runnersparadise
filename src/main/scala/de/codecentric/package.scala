@@ -27,4 +27,5 @@ package object codecentric extends ScalazSyntax {
 
 trait ScalazSyntax extends ToEqualOps with ToShowOps with ToEitherOps with ToFunctorOps {
   implicit val uuidShow: Show[UUID] = Show.showFromToString
+  implicit val intShow: Show[Int] = Show.showFromToString
 }

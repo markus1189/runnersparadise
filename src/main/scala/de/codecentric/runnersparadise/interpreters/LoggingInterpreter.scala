@@ -2,10 +2,12 @@ package de.codecentric.runnersparadise.interpreters
 
 import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg}
 import de.codecentric.runnersparadise.domain._
+import org.slf4j.LoggerFactory
 
 import scalaz.Const
 
-class Logger {
+class Logger() {
+  LoggerFactory.getLogger(this.getClass)
   implicit val runners: RunnerAlg[Const[Unit, ?]] = new RunnerAlg[Const[Unit, ?]] {
     override def saveRunner(runner: Runner): Const[Unit, Unit] =
       Const(println(s"Saving runner: $runner"))
