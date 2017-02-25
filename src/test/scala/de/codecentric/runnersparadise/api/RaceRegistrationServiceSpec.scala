@@ -1,15 +1,17 @@
 package de.codecentric
 package runnersparadise.api
 
+import java.util.concurrent.atomic.AtomicReference
+
 import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.fixtures.{RaceFixtures, RunnerFixtures}
-import de.codecentric.runnersparadise.interpreters.InMemory
+import de.codecentric.runnersparadise.interpreters.{Pure, PureState}
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
 
 import scalaz.concurrent.Task
-import scalaz.{Id, ~>}
+import scalaz.~>
 
 class RaceRegistrationServiceSpec extends UnitSpec {
   "RaceRegistrationService" should {
@@ -49,7 +51,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       result.firstname should ===(firstname)
       result.lastname should ===(lastname)
 
-      interpreters.runnerStore.get(result.id).value should ===(result)
+      state.get.runners.get(result.id).value should ===(result)
     }
 
     "get present races" in new WithFixtures {
@@ -87,7 +89,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       result.name should ===(name)
       result.maxAttendees should ===(max)
 
-      interpreters.raceStore.get(result.id).value should ===(result)
+      state.get.races.get(result.id).value should ===(result)
     }
 
     "create a registration for the first attendee" in new WithFixtures {
@@ -106,8 +108,12 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
     "update an existing registration for another attendee if enough free places left" in new WithFixtures {
       val newRunner = RunnerFixtures.create(firstname = "New Kid", lastname = "On the block")
-      interpreters.registrations.saveReg(Registration(race, Set(runner)))
-      interpreters.runners.saveRunner(newRunner)
+      import Pure.AtomicReferenceOps
+
+      state.update(
+        s =>
+          s.copy(registrations = s.registrations.updated(race.id, Registration(race, Set(runner))),
+                 runners = s.runners.updated(newRunner.id, newRunner)))
 
       val req = Request(method = Method.PUT, uri = Uri(path = "/registration"))
         .withBody(Json.obj("runner" -> Json.fromString(newRunner.id.value.shows),
@@ -122,8 +128,10 @@ class RaceRegistrationServiceSpec extends UnitSpec {
     }
 
     "reject registration if there are no places left" in new WithFixtures {
+      import Pure.AtomicReferenceOps
       val newRace = RaceFixtures.create(name = "Very Exclusive Race", maxAttendees = 0)
-      interpreters.races.saveRace(newRace)
+
+      state.update(s => s.copy(races = s.races.updated(newRace.id, newRace)))
 
       val req = Request(method = Method.PUT, uri = Uri(path = "/registration"))
         .withBody(Json.obj("runner" -> Json.fromString(runner.id.value.shows),
@@ -142,16 +150,17 @@ class RaceRegistrationServiceSpec extends UnitSpec {
   trait WithFixtures {
     val runner       = RunnerFixtures.harryDesden
     val race         = RaceFixtures.runnersParadise
-    val interpreters = new InMemory
-    import interpreters._
-    val registrationService = new RaceRegistrationService(new (Id.Id ~> Task) {
-      override def apply[A](fa: A): Task[A] = Task.delay(fa)
+    val initialState = PureState(Map(runner.id -> runner), Map(race.id -> race), Map.empty)
+
+    val state = new AtomicReference(initialState)
+
+    val registrationService = new RaceRegistrationService(new (Pure ~> Task) {
+      override def apply[A](fa: Pure[A]): Task[A] = Task.delay(fa.value(state))
     })
 
-    interpreters.runners.saveRunner(runner)
-    interpreters.races.saveRace(race)
-
     def performRequest(req: Request): Response = registrationService.service.run(req).run
+
+    def run[A](fa: Pure[A]): A = fa.value(state)
   }
 
 }

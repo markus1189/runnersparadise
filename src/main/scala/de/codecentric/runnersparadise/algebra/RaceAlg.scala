@@ -7,6 +7,8 @@ trait RaceAlg[F[_]] {
   def saveRace(race: Race): F[Unit]
 
   def findRace(id: RaceId): F[Option[Race]]
+
+  def listRaces: F[Vector[Race]]
 }
 
 object RaceAlg {

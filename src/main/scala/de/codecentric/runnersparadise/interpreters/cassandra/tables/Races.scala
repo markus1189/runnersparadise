@@ -31,6 +31,15 @@ abstract class Races extends CassandraTable[Races, Race] with RootConnector {
     }
   }
 
+  def list: Task[Vector[Race]] = {
+    Task.async[Vector[Race]] { k =>
+      select.all().fetch().map(_.to[Vector]).onComplete {
+        case Success(r) => k(r.right)
+        case Failure(e) => k(e.left)
+      }
+    }
+  }
+
   override def fromRow(r: Row): Race = {
     Race(RaceId(id(r)), name(r), maxAttendees(r))
   }

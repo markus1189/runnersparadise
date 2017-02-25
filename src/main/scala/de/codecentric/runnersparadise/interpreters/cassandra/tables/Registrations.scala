@@ -2,7 +2,7 @@ package de.codecentric
 package runnersparadise.interpreters.cassandra.tables
 
 import com.outworkers.phantom.dsl._
-import de.codecentric.runnersparadise.domain.{RaceId, Registration, Runner, RunnerId}
+import de.codecentric.runnersparadise.domain._
 
 import scala.util.{Failure, Success}
 import scalaz.concurrent.Task

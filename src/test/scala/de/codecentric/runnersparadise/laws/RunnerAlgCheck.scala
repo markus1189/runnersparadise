@@ -1,31 +1,27 @@
 package de.codecentric.runnersparadise.laws
 
+import java.util.concurrent.atomic.AtomicReference
+
 import com.outworkers.phantom.connectors.KeySpace
 import de.codecentric.UnitSpec
 import de.codecentric.runnersparadise.algebra.RunnerAlg
 import de.codecentric.runnersparadise.domain.Runner
-import de.codecentric.runnersparadise.interpreters.InMemory
-import de.codecentric.runnersparadise.interpreters.cassandra.{
-  CassandraInterpreter,
-  Keyspaces,
-  RunnersParadiseDb
-}
+import de.codecentric.runnersparadise.interpreters.cassandra.{Cass, Keyspaces, RunnersParadiseDb}
+import de.codecentric.runnersparadise.interpreters.{Pure, PureState}
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.prop.PropertyChecks
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
+import scalaz.Applicative
 import scalaz.concurrent.Task
 import scalaz.syntax.applicative._
-import scalaz.{Applicative, Id}
 
-abstract class RunnerAlgCheck[F[_]: Applicative](name: String)
+abstract class RunnerAlgCheck[F[_]: Applicative: RunnerAlg](name: String)
     extends UnitSpec
     with PropertyChecks
     with ArbitraryInstances {
-
-  implicit def instance: RunnerAlg[F]
 
   def run[A](x: F[A]): A
 
@@ -47,16 +43,14 @@ abstract class RunnerAlgCheck[F[_]: Applicative](name: String)
   }
 }
 
-class RunnerAlgInMemoryCheck extends RunnerAlgCheck[Id.Id]("InMemory") {
-  def run[A](x: Id.Id[A]): A = x
-
-  override implicit val instance: RunnerAlg[Id.Id] = {
-    val inMemory = new InMemory
-    inMemory.runners
+class RunnerAlgInMemoryCheck extends RunnerAlgCheck[Pure]("InMemory") {
+  override def run[A](x: Pure[A]): A = {
+    val s = new AtomicReference(PureState.empty)
+    x.value(s)
   }
 }
 
-class RunnerAlgCassandraCheck extends RunnerAlgCheck[Task]("Cassandra") with BeforeAndAfterAll {
+class RunnerAlgCassandraCheck extends RunnerAlgCheck[Cass]("Cassandra") with BeforeAndAfterAll {
   implicit val ec = ExecutionContext.fromExecutor(null)
 
   EmbeddedCassandraServerHelper.startEmbeddedCassandra()
@@ -68,14 +62,10 @@ class RunnerAlgCassandraCheck extends RunnerAlgCheck[Task]("Cassandra") with Bef
 
   def run[A](x: Task[A]): A = x.run
 
-  override implicit val instance: RunnerAlg[Task] = {
-    val cassandra = new CassandraInterpreter(new RunnersParadiseDb(Keyspaces.embedded))
-
-    cassandra.runners
-  }
-
   override def afterAll(): Unit = {
     db.shutdown()
     EmbeddedCassandraServerHelper.getCluster.close()
   }
+
+  override def run[A](x: Cass[A]): A = x.run(db).run
 }

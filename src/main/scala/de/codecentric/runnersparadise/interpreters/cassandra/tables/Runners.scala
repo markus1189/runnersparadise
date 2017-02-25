@@ -37,6 +37,15 @@ abstract class Runners extends CassandraTable[Runners, Runner] with RootConnecto
     }
   }
 
+  def list: Task[Vector[Runner]] = {
+    Task.async[Vector[Runner]] { k =>
+      select.all().fetch().map(_.to[Vector]).onComplete {
+        case Success(r) => k(r.right)
+        case Failure(e) => k(e.left)
+      }
+    }
+  }
+
   override def fromRow(r: Row): Runner = {
     Runner(RunnerId(id(r)), firstname(r), lastname(r), nickname(r))
   }

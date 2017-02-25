@@ -8,6 +8,8 @@ trait RunnerAlg[F[_]] {
   def saveRunner(runner: Runner): F[Unit]
 
   def findRunner(id: RunnerId): F[Option[Runner]]
+
+  def listRunners: F[Vector[Runner]]
 }
 
 object RunnerAlg {
