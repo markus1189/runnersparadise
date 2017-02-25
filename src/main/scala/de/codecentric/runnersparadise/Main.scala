@@ -13,8 +13,9 @@ import scalaz.concurrent.Task
 import scalaz.~>
 
 object MainInMemory extends ServerApp {
+  val state = new AtomicReference(PureState.empty)
   val srv: RaceRegistrationService[Pure] = new RaceRegistrationService(new (Pure ~> Task) {
-    override def apply[A](fa: Pure[A]): Task[A] = Task.delay(fa.value(new AtomicReference(PureState.empty)))
+    override def apply[A](fa: Pure[A]): Task[A] = Task.delay(fa.value(state))
   })
 
   override def server(args: List[String]): Task[Server] =
