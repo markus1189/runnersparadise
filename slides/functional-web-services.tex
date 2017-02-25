@@ -38,7 +38,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{What are we gonna do tonight}
+  \frametitle{What are we going to do tonight}
   \begin{itemize}
   \item write a small web service
   \item with http4s
@@ -59,6 +59,30 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Embedded DSLs}
+  \begin{itemize}
+  \item embedded in general purpose language
+  \item functional: separate \texttt{description} of program from
+    \texttt{execution}
+  \item initial encoding: \texttt{Free Monads}
+  \item final encoding: \texttt{typeclasses + instances}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Road Ahead}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Writing Web Services With Http4s}
+  \begin{itemize}
+  \item define \texttt{HttpService} using the DSL
+  \item \texttt{really} just \texttt{Request =>
+      Task[Response]}\footnote{okay PartialFunction[Request,Task[Response]]}
+  \end{itemize}
+\end{frame}
+
 \begin{frame}[fragile]
   \frametitle{Typeclasses need laws}
   \begin{itemize}
@@ -69,12 +93,39 @@
 trait RunnerAlg[F[_]] {
   def saveRunner(runner: Runner): F[Unit]
   def findRunner(id: RunnerId): F[Option[Runner]]
+  def listRunner: F[Vector[Runner]]
 }
 \end{minted}
   \begin{itemize}
-  \item<2-> \texttt{saveRunner} $\circ{}$ \texttt{saveRunner}
-  \item<2-> \texttt{findRunner} $\circ{}$ \texttt{findRunner}
-  \item<2-> \texttt{findRunner} $\circ{}$ \texttt{saveRunner}
+  \item<2-> \texttt{saveRunner *> saveRunner}
+  \item<2-> \texttt{findRunner *> findRunner}
+  \item<2-> \texttt{saveRunner *> findRunner}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Writing a DSL}
+  \item write typeclasses for operations of DSL
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{ScalaCheck}
+  \begin{itemize}
+  \item ScalaCheck is perfect for checking our laws
+  \item defined in terms of \texttt{RunnerAlg[F[\_]]}
+  \end{itemize}
+
+\begin{minted}{scala}
+forAll { (runner: Runner) =>
+  run {
+    RunnerAlg().saveRunner(runner) *>
+      RunnerAlg().findRunner(runner.id)
+  }.value should ===(runner)
+}
+\end{minted}
+  \begin{itemize}
+  \item instantiate this test for our instances
+  \item pure in memory, cassandra, postgres, \dots{}
   \end{itemize}
 \end{frame}
 
