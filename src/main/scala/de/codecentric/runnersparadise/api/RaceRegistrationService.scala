@@ -3,12 +3,7 @@ package de.codecentric.runnersparadise.api
 import java.util.UUID
 
 import de.codecentric.runnersparadise.Errors.RegistrationError._
-import de.codecentric.runnersparadise.algebra.{
-  RaceAlg,
-  RegistrationAlg,
-  RunnerAlg,
-  RunnerFunctions
-}
+import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg, RunnerFunctions}
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
