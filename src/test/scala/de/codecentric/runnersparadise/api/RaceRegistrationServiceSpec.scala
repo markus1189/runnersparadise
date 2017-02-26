@@ -144,7 +144,6 @@ class RaceRegistrationServiceSpec extends UnitSpec {
       val result = resp.as(EntityDecoder.text).run
       result should ===(RaceRegistrationService.messages.raceHasMaxAttendees)
     }
-
   }
 
   trait WithFixtures {

@@ -20,4 +20,5 @@ case class Runner(id: RunnerId, firstname: String, lastname: String, nickname: O
 object Runner {
   implicit val decoder: Decoder[Runner] = deriveDecoder
   implicit val encoder: Encoder[Runner] = deriveEncoder
+  implicit val ordering: Ordering[Runner] = Ordering.by(_.id.value)
 }
