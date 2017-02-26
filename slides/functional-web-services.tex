@@ -12,7 +12,7 @@
 
 \title{Functional Web Services}
 
-\hypersetup{colorlinks,linkcolor=beamer@ccblue,urlcolor=links}
+\hypersetup{colorlinks,linkcolor=beamer@ccblue}
 
 \begin{document}
 {
@@ -39,12 +39,21 @@
 
 \begin{frame}
   \frametitle{What are we going to do tonight}
-  \begin{itemize}
-  \item write a small web service
-  \item with http4s
-  \item using an embedded DSL
-  \item keep it functional
-  \end{itemize}
+  \begin{minipage}{0.2\linewidth}
+    \includegraphics[width=0.19\linewidth]{pics/scalpel.png}
+  \end{minipage}
+  \begin{minipage}{0.7\linewidth}
+    \begin{itemize}
+    \item write a small web service
+    \item with http4s
+    \item using an embedded DSL
+    \item emphasize functional style
+    \end{itemize}
+  \end{minipage}
+  \vfill
+  \begin{center}
+    \url{https://github.com/markus1189/runnersparadise}
+  \end{center}
 \end{frame}
 
 \begin{frame}
@@ -55,6 +64,7 @@
     \texttt{execution}
   \item initial encoding: \texttt{Free Monads}
   \item final encoding: \texttt{typeclasses + instances}
+  \item also: deep vs shallow embedding
   \end{itemize}
 \end{frame}
 
@@ -62,8 +72,11 @@
 
 \begin{frame}
   \frametitle{A First DSL}
+  \begin{center}
+    \includegraphics[width=2cm]{pics/owl.png}
+  \end{center}
   \begin{itemize}
-  \item let's start wit our first DSL
+  \item let's start with our first DSL
   \item arithmetic operations: \texttt{+} and \texttt{-} (negation)
   \item how would you do this in an initial encoding?
   \end{itemize}
@@ -189,6 +202,176 @@ HttpService {
 \end{frame}
 
 \begin{frame}[fragile]
+  \frametitle{Our API}
+\begin{minted}{scala}
+GET  "localhost/runner/<runner-id>"
+GET  "localhost/race/<race-id>"
+GET  "localhost/registration/<race-id>"
+PUT  "localhost/registration"
+POST "localhost/runner"
+POST "localhost/race"
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Our API}
+\begin{minted}{scala}
+case GET -> Root / "runner" / RunnerIdVar(rid)
+case GET -> Root / "race" / RaceIdVar(rid)
+case GET -> Root / "registration" / RaceIdVar(rid)
+case req @ PUT -> Root / "registration"
+case req @ POST -> Root / "runner"
+case req @ POST -> Root / "race"
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Runners Paradise DSL}
+\begin{minted}{scala}
+trait RunnerAlg[F[_]] {
+  def saveRunner(runner: Runner): F[Unit]
+  def findRunner(id: RunnerId): F[Option[Runner]]
+}
+\end{minted}
+  \begin{itemize}
+  \item we use a \textit{higher-kinded} type \texttt{F}
+  \item kind: \texttt{* -> *}, i.e.\ it needs another type of kind
+    \texttt{*}
+  \item results are wrapped in \texttt{F[\_]}
+  \item \textit{instances choose the concrete F}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Runners Paradise DSL}
+\begin{minted}{scala}
+trait RaceAlg[F[_]] {
+  def saveRace(race: Race): F[Unit]
+  def findRace(id: RaceId): F[Option[Race]]
+}
+\end{minted}
+\begin{minted}{scala}
+trait RegistrationAlg[F[_]] {
+  def saveReg(reg: Registration): F[Unit]
+  def findReg(id: RaceId): F[Option[Registration]]
+}
+\end{minted}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Runners Pradise DSL: Registrations}
+  \begin{itemize}
+  \item allow registration of runners for races
+  \item if:
+    \begin{itemize}
+    \item race exists
+    \item runner exists
+    \item race has free slots
+    \end{itemize}
+  \item reality: \texttt{Either[RegistrationError,Registration]}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Fair Warning: Fancy Code Incoming}
+  \includegraphics[width=\textwidth]{pics/warning.png}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Runners Paradise DSL}
+\begin{minted}[fontsize=\footnotesize]{scala}
+def registerOpt[F[_]:Monad:RunnerAlg:RaceAlg:RegistrationAlg](
+      runnerId: RunnerId,
+      raceId: RaceId): F[Option[Registration]] = {
+
+    val M = Monad[OptionT[F, ?]]
+
+    for {
+      runner <- OptionT(RunnerAlg().findRunner(runnerId))
+      race   <- OptionT(RaceAlg().findRace(raceId))
+      reg    <- OptionT(RegistrationAlg().findReg(raceId)).
+                  orElse(M.point(Registration(race, Set())))
+      newReg <- OptionT(reg.add(runner).pure[F])
+      _      <- OptionT(RegistrationAlg().saveReg(newReg).
+                  map(Option(_)))
+    } yield newReg
+  }.run
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Registration Program}
+\begin{minted}{scala}
+def registerOpt[F[_]:             // still abstract
+                Monad:            // flatMap
+                RunnerAlg:        // runners
+                RaceAlg:          // races
+                RegistrationAlg]( // registrations
+  runnerId: RunnerId,             // runner id
+  raceId: RaceId                  // race id
+): F[Option[Registration]]        // wrapped in F
+\end{minted}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Getting More Concrete: Instances}
+  \begin{itemize}
+  \item to actually run programs, we need to have instances
+  \item need to satisfy \texttt{all} constraints
+  \item pure in-memory, cassandra, postgres, redis, \dots{}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,fragile]
+  \frametitle{Instances for our DSL}
+\begin{minted}{scala}
+class Cass[A](
+  val value: ReaderT[Task, RunnersParadiseDb, A]
+) extends AnyVal {
+  def run: RunnersParadiseDb => Task[A] = value.run
+}
+\end{minted}
+  \begin{itemize}
+  \item \texttt{RunnersParadiseDb => Task[A]}
+  \item given a connection to the DB, asynchronous results
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile,fragile]
+  \frametitle{Instances for our DSL}
+\begin{minted}{scala}
+class Cass[A](
+  val value: ReaderT[Task, RunnersParadiseDb, A]
+) extends AnyVal {
+  def run: RunnersParadiseDb => Task[A] = value.run
+}
+\end{minted}
+  \vfill
+\begin{minted}{scala}
+def saveRunner(runner: Runner): Cass[Unit] =
+  new Cass(ReaderT(_.runners.save(runner).void))
+\end{minted}
+\end{frame}
+
+\section{Final Encodings and http4s}
+
+\begin{frame}[fragile]
+  \frametitle{Putting It Together}
+  \begin{itemize}
+  \item remember signature of routes?
+  \end{itemize}
+\begin{minted}{scala}
+Request => Task[Response]
+\end{minted}
+  \begin{itemize}
+  \item at the end our program \textbf{has} to produce a \texttt{Task}
+  \item but we don't want to be limited by this
+  \end{itemize}
+\end{frame}
+
+\section{Testing}
+
+\begin{frame}[fragile]
   \frametitle{Typeclasses need laws}
   \begin{itemize}
   \item<1-> typeclasses should \textit{always} come with laws
@@ -227,6 +410,16 @@ forAll { (runner: Runner) =>
   \begin{itemize}
   \item instantiate this test for our instances
   \item pure in memory, cassandra, postgres, \dots{}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Review of Final Encodings}
+  \begin{itemize}
+  \item initial encoding is not always the best
+  \item final encoding is easier to extend
+  \item btw: nice way to solve expression problem (exercise)
+  \item you can \textit{always} convert between initial and final
   \end{itemize}
 \end{frame}
 

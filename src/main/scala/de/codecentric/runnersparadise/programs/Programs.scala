@@ -6,8 +6,10 @@ import de.codecentric.runnersparadise.Errors.RegistrationError._
 import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerAlg}
 import de.codecentric.runnersparadise.domain._
 
+import scalaz.std.vector._
 import scalaz.syntax.applicative._
-import scalaz.{Foldable, Monad, OptionT}
+import scalaz.syntax.foldable._
+import scalaz.{Monad, OptionT}
 
 trait Programs {
   def register[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
@@ -26,21 +28,32 @@ trait Programs {
     } yield newReg
   }.run.map(_.toEither)
 
+  def registerOpt[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
+      runnerId: RunnerId,
+      raceId: RaceId): F[Option[Registration]] = {
+
+    val M = Monad[OptionT[F, ?]]
+
+    for {
+      runner <- OptionT(RunnerAlg().findRunner(runnerId))
+      race   <- OptionT(RaceAlg().findRace(raceId))
+      reg    <- OptionT(RegistrationAlg().findReg(raceId)).orElse(M.point(Registration(race, Set())))
+      newReg <- OptionT(reg.add(runner).pure[F])
+      _      <- OptionT(RegistrationAlg().saveReg(newReg).map(Option(_)))
+    } yield newReg
+  }.run
+
   def demo[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg]: F[Option[Registration]] = {
     val race = Race(RaceId.random(), "The Grand Challenge", 5)
-    println(race.id)
     val runners =
-      List.tabulate(5)(i => Runner(RunnerId.random(), "runner", s"$i", None))
+      Vector.tabulate(5)(i => Runner(RunnerId.random(), "runner", s"$i", None))
 
-    val saveRunners = Foldable[List](scalaz.std.list.listInstance).traverse_(runners)(runner =>
-      RunnerAlg().saveRunner(runner))
+    val saveRunners = runners.traverse_(runner => RunnerAlg().saveRunner(runner))
 
     val saveRace  = RaceAlg().saveRace(race)
     val foundRace = RaceAlg().findRace(race.id)
-    val registerRunners = Foldable[List](scalaz.std.list.listInstance).traverse_(runners) {
-      runner =>
-        println(s"Trying to register ${runner.id} for ${race.id}")
-        Programs.register(runner.id, race.id)
+    val registerRunners = runners.traverseU_ { runner =>
+      Programs.register[F](runner.id, race.id)
     }
 
     val findReg = RegistrationAlg().findReg(race.id)

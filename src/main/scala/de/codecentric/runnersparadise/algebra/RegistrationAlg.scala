@@ -4,9 +4,9 @@ package runnersparadise.algebra
 import de.codecentric.runnersparadise.domain.{RaceId, Registration}
 
 trait RegistrationAlg[F[_]] {
-  def findReg(id: RaceId): F[Option[Registration]]
-
   def saveReg(reg: Registration): F[Unit]
+
+  def findReg(id: RaceId): F[Option[Registration]]
 }
 
 object RegistrationAlg {
