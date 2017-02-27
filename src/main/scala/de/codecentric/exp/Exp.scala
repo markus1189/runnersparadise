@@ -1,9 +1,6 @@
 package de.codecentric
 package exp
 
-import com.sun.org.apache.xpath.internal.operations.Bool
-import scala.reflect.runtime.universe._
-
 sealed trait Exp[A] {
   def lit(x: Int): A
   def neg(e: A): A
