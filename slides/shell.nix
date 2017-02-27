@@ -26,6 +26,7 @@ let
     ocgx2
     pgf
     scheme-medium
+    soul
     todonotes
     upquote
     xcolor

@@ -3,6 +3,7 @@
 \usepackage{minted}
 \usepackage{tikz}
 \usepackage{todonotes}
+\usepackage{soul}
 
 \setminted{frame=single}
 
@@ -52,6 +53,9 @@
   \end{minipage}
   \vfill
   \begin{center}
+    \includegraphics[height=10mm]{pics/github.png}
+  \end{center}
+  \begin{center}
     \url{https://github.com/markus1189/runnersparadise}
   \end{center}
 \end{frame}
@@ -59,8 +63,8 @@
 \begin{frame}
   \frametitle{Embedded DSLs}
   \begin{itemize}
-  \item embedded in general purpose language
-  \item functional: separate \texttt{description} of program from
+  \item embedded in general purpose language (host language)
+  \item powerful: separate \texttt{description} of program from
     \texttt{execution}
   \item initial encoding: \texttt{Free Monads}
   \item final encoding: \texttt{typeclasses + instances}
@@ -102,18 +106,52 @@ Add(Lit(8),
 \end{frame}
 
 \begin{frame}
+  \frametitle{Initial Encoding}
+  \begin{center}
+    \Huge
+    DSL
+  \end{center}
+  \begin{center}
+    \Huge
+    AST
+  \end{center}
+  \begin{center}
+    \Huge
+    Interpreter
+  \end{center}
+\end{frame}
+
+\begin{frame}
   \frametitle{Properties of the Initial Encoding}
   \begin{itemize}
   \item nice to have ADT with possible cases
   \item flexible interpretation, evaluate, pretty print, \dots{}
   \item bad: extending with e.g.\ multiplication is not independent
   \item let's try something different: \texttt{final encoding}
+  \item still embedded DSL, get rid of AST
   \end{itemize}
 \end{frame}
 
 \begin{frame}
+  \frametitle{Final Encoding}
   \begin{center}
-    \Huge Live Coding: Our first DSL
+    \Huge
+    DSL
+  \end{center}
+  \begin{center}
+    \Huge
+    \st{AST}
+  \end{center}
+  \begin{center}
+    \Huge
+    Interpreter
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \begin{center}
+    \Huge Live Coding: Our First DSL
   \end{center}
   \begin{center}
     \includegraphics[width=0.7\textwidth]{pics/penguins.jpg}
@@ -150,7 +188,7 @@ new Exp[Int] {
   \end{itemize}
 \end{frame}
 
-\section{Web Services with Http4s}
+\section{Web Services With Http4s}
 
 \begin{frame}
   \begin{center}
@@ -159,15 +197,24 @@ new Exp[Int] {
 \end{frame}
 
 \begin{frame}{http4s}
-  \begin{block}{What is \hyperlink{http://http4s.org/}{http4}}
+  \begin{center}
+    \includegraphics[width=15mm]{pics/http4s.png}
+  \end{center}
+
+  \begin{block}{What is \hyperlink{http://http4s.org/}{http4s}}
     A typeful, purely functional, streaming library for HTTP
     clients and servers in Scala.
   \end{block}
   \begin{itemize}
   \item typeful \textemdash{} self-documentation and compile-time verification
   \item purely functional \textemdash{} promote composability and reasoning
-  \item streaming \textemdash{} large payloads in constant space and websockets
+  \item streaming \textemdash{} large payloads in constant space and
+    websockets
   \end{itemize}
+  \begin{center}
+    \alert{(currently being rewritten to use \texttt{cats} and \texttt{fs2})}
+  \end{center}
+
 \end{frame}
 
 \begin{frame}[fragile]
@@ -205,23 +252,31 @@ HttpService {
   \frametitle{Our API}
 \begin{minted}{scala}
 GET  "localhost/runner/<runner-id>"
+POST "localhost/runner"
+
 GET  "localhost/race/<race-id>"
+POST "localhost/race"
+
 GET  "localhost/registration/<race-id>"
 PUT  "localhost/registration"
-POST "localhost/runner"
-POST "localhost/race"
 \end{minted}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{Our API}
-\begin{minted}{scala}
-case GET -> Root / "runner" / RunnerIdVar(rid)
-case GET -> Root / "race" / RaceIdVar(rid)
-case GET -> Root / "registration" / RaceIdVar(rid)
-case req @ PUT -> Root / "registration"
-case req @ POST -> Root / "runner"
-case req @ POST -> Root / "race"
+\begin{minted}[fontsize=\small]{scala}
+HttpService {
+
+  case GET -> Root / "runner" / RunnerIdVar(v)     => ???
+  case req @ POST -> Root / "runner"               => ???
+
+  case GET -> Root / "race" / RaceIdVar(v)         => ???
+  case req @ POST -> Root / "race"                 => ???
+
+  case GET -> Root / "registration" / RaceIdVar(v) => ???
+  case req @ PUT -> Root / "registration"          => ???
+
+}
 \end{minted}
 \end{frame}
 
@@ -318,6 +373,9 @@ def registerOpt[F[_]:             // still abstract
   \begin{itemize}
   \item to actually run programs, we need to have instances
   \item need to satisfy \texttt{all} constraints
+    \begin{itemize}
+    \item try to keep them minimal!
+    \end{itemize}
   \item pure in-memory, cassandra, postgres, redis, \dots{}
   \end{itemize}
 \end{frame}
@@ -436,7 +494,9 @@ forAll { (runner: Runner) =>
   \item Oleg Kiselyov: Lecture notes on
     \href{http://okmij.org/ftp/tagless-final/course/lecture.pdf}{Typed
       Tagless Final Interpreters}
-  \item Runner's Paradise Code: \url{https://github.com/markus1189/runnersparadise}
+  \item Runner's Paradise Code:
+    \url{https://github.com/markus1189/runnersparadise}
+  \item http4s: \url{http://http4s.org/}
   \end{itemize}
 \end{frame}
 
