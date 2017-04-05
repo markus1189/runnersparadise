@@ -13,7 +13,7 @@ trait RunnerAlg[F[_]] {
 }
 
 object RunnerAlg {
-  def apply[F[_]: RunnerAlg](): RunnerAlg[F] = implicitly
+  def apply[F[_]: RunnerAlg]: RunnerAlg[F] = implicitly
 }
 
 trait RunnerFunctions {

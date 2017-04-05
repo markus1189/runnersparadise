@@ -12,5 +12,5 @@ trait RaceAlg[F[_]] {
 }
 
 object RaceAlg {
-  def apply[F[_]: RaceAlg](): RaceAlg[F] = implicitly
+  def apply[F[_]: RaceAlg]: RaceAlg[F] = implicitly
 }

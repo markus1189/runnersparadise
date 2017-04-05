@@ -11,35 +11,35 @@ object Prod {
   implicit def runnerAlg[F[_]: RunnerAlg, G[_]: RunnerAlg]: RunnerAlg[Prod[F, G, ?]] =
     new RunnerAlg[Prod[F, G, ?]] {
       override def findRunner(id: RunnerId): Prod[F, G, Option[Runner]] =
-        Prod(RunnerAlg[F]().findRunner(id), RunnerAlg[G]().findRunner(id))
+        Prod(RunnerAlg[F].findRunner(id), RunnerAlg[G].findRunner(id))
 
       override def saveRunner(runner: Runner): Prod[F, G, Unit] =
-        Prod(RunnerAlg[F]().saveRunner(runner), RunnerAlg[G]().saveRunner(runner))
+        Prod(RunnerAlg[F].saveRunner(runner), RunnerAlg[G].saveRunner(runner))
 
       override def listRunners: Prod[F, G, Vector[Runner]] =
-        Prod(RunnerAlg[F]().listRunners, RunnerAlg[G]().listRunners)
+        Prod(RunnerAlg[F].listRunners, RunnerAlg[G].listRunners)
     }
 
   implicit def raceAlg[F[_]: RaceAlg, G[_]: RaceAlg]: RaceAlg[Prod[F, G, ?]] =
     new RaceAlg[Prod[F, G, ?]] {
       override def saveRace(race: Race): Prod[F, G, Unit] =
-        Prod(RaceAlg[F]().saveRace(race), RaceAlg[G]().saveRace(race))
+        Prod(RaceAlg[F].saveRace(race), RaceAlg[G].saveRace(race))
 
       override def findRace(id: RaceId): Prod[F, G, Option[Race]] =
-        Prod(RaceAlg[F]().findRace(id), RaceAlg[G]().findRace(id))
+        Prod(RaceAlg[F].findRace(id), RaceAlg[G].findRace(id))
 
       override def listRaces: Prod[F, G, Vector[Race]] =
-        Prod(RaceAlg[F]().listRaces, RaceAlg[G]().listRaces)
+        Prod(RaceAlg[F].listRaces, RaceAlg[G].listRaces)
     }
 
   implicit def regAlg[F[_]: RegistrationAlg, G[_]: RegistrationAlg]
     : RegistrationAlg[Prod[F, G, ?]] =
     new RegistrationAlg[Prod[F, G, ?]] {
       override def findReg(id: RaceId): Prod[F, G, Option[Registration]] =
-        Prod(RegistrationAlg[F]().findReg(id), RegistrationAlg[G]().findReg(id))
+        Prod(RegistrationAlg[F].findReg(id), RegistrationAlg[G].findReg(id))
 
       override def saveReg(reg: Registration): Prod[F, G, Unit] =
-        Prod(RegistrationAlg[F]().saveReg(reg), RegistrationAlg[G]().saveReg(reg))
+        Prod(RegistrationAlg[F].saveReg(reg), RegistrationAlg[G].saveReg(reg))
     }
 
   implicit def prodMonad[F[_]: Monad, G[_]: Monad]: Monad[Prod[F, G, ?]] =

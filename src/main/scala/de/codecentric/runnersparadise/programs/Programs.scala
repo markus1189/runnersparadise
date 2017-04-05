@@ -16,14 +16,14 @@ trait Programs {
       runnerId: RunnerId,
       raceId: RaceId): F[Either[RegistrationError, Registration]] = {
     for {
-      runner <- OptionT(RunnerAlg().findRunner(runnerId))
+      runner <- OptionT(RunnerAlg[F].findRunner(runnerId))
         .toRight[RegistrationError](RunnerNotFound(runnerId))
-      race <- OptionT(RaceAlg().findRace(raceId)).toRight[RegistrationError](RaceNotFound(raceId))
-      reg <- OptionT(RegistrationAlg().findReg(raceId))
+      race <- OptionT(RaceAlg[F].findRace(raceId)).toRight[RegistrationError](RaceNotFound(raceId))
+      reg <- OptionT(RegistrationAlg[F].findReg(raceId))
         .orElse(OptionT(Option(Registration(race, Set())).pure[F]))
         .toRight[RegistrationError](RegistrationNotFound(raceId))
       newReg <- OptionT(reg.add(runner).pure[F]).toRight[RegistrationError](RaceHasMaxAttendees)
-      _ <- OptionT(RegistrationAlg().saveReg(newReg).map(Option(_)))
+      _ <- OptionT(RegistrationAlg[F].saveReg(newReg).map(Option(_)))
         .toRight[RegistrationError](RegistrationSaveFailed(None))
     } yield newReg
   }.run.map(_.toEither)
@@ -35,11 +35,11 @@ trait Programs {
     val M = Monad[OptionT[F, ?]]
 
     for {
-      runner <- OptionT(RunnerAlg().findRunner(runnerId))
-      race   <- OptionT(RaceAlg().findRace(raceId))
-      reg    <- OptionT(RegistrationAlg().findReg(raceId)).orElse(M.point(Registration(race, Set())))
+      runner <- OptionT(RunnerAlg[F].findRunner(runnerId))
+      race   <- OptionT(RaceAlg[F].findRace(raceId))
+      reg    <- OptionT(RegistrationAlg[F].findReg(raceId)).orElse(M.point(Registration(race, Set())))
       newReg <- OptionT(reg.add(runner).pure[F])
-      _      <- OptionT(RegistrationAlg().saveReg(newReg).map(Option(_)))
+      _      <- OptionT(RegistrationAlg[F].saveReg(newReg).map(Option(_)))
     } yield newReg
   }.run
 
@@ -48,15 +48,15 @@ trait Programs {
     val runners =
       Vector.tabulate(5)(i => Runner(RunnerId.random(), "runner", s"$i", None))
 
-    val saveRunners = runners.traverse_(runner => RunnerAlg().saveRunner(runner))
+    val saveRunners = runners.traverse_(runner => RunnerAlg[F].saveRunner(runner))
 
-    val saveRace  = RaceAlg().saveRace(race)
-    val foundRace = RaceAlg().findRace(race.id)
+    val saveRace  = RaceAlg[F].saveRace(race)
+    val foundRace = RaceAlg[F].findRace(race.id)
     val registerRunners = runners.traverseU_ { runner =>
       Programs.register[F](runner.id, race.id)
     }
 
-    val findReg = RegistrationAlg().findReg(race.id)
+    val findReg = RegistrationAlg[F].findReg(race.id)
 
     saveRunners *> saveRace *> foundRace *> registerRunners *> findReg
   }

@@ -42,7 +42,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
       request.decodeWith(jsonOf[AddRace], strict = true) { r =>
         val raceId = RaceId.random()
         val race   = Race(raceId, r.name, r.maxAttendees)
-        toTask(RaceAlg().saveRace(race)) *>
+        toTask(RaceAlg[F].saveRace(race)) *>
           Uri
             .fromString(s"/race/${raceId.value}")
             .map(uri => Created(race.asJson).putHeaders(Location(uri)))
@@ -53,14 +53,14 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     def handleAbout(): Task[Response] = Ok(messages.about)
 
     def handleGetRunner(rid: RunnerId): Task[Response] = {
-      toTask(RunnerAlg().findRunner(rid)).flatMap {
+      toTask(RunnerAlg[F].findRunner(rid)).flatMap {
         case Some(runner) => Ok(runner.asJson)
         case None         => NotFound(messages.noSuchRunner(rid))
       }
     }
 
     def handleGetRace(rid: RaceId): Task[Response] = {
-      toTask(RaceAlg().findRace(rid)).flatMap {
+      toTask(RaceAlg[F].findRace(rid)).flatMap {
         case Some(race) => Ok(race.asJson)
         case None       => NotFound(messages.noSuchRace(rid))
       }
@@ -69,7 +69,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     def handleAddRunner(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRunner], strict = true) { r =>
         val runner = RunnerFunctions.createRunner(r)
-        toTask(RunnerAlg().saveRunner(runner)) *>
+        toTask(RunnerAlg[F].saveRunner(runner)) *>
           Uri
             .fromString(s"/runner/${runner.id.value}")
             .map(uri => Created(runner.asJson).putHeaders(Location(uri)))
@@ -102,7 +102,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     }
 
     def handleGetRegistration(raceId: RaceId): Task[Response] = {
-      toTask(RegistrationAlg().findReg(raceId)).flatMap {
+      toTask(RegistrationAlg[F].findReg(raceId)).flatMap {
         case Some(reg) => Ok(reg.asJson)
         case None      => NotFound(messages.registrationNotFound(raceId))
       }

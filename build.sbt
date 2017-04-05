@@ -17,7 +17,7 @@ lazy val libDeps = {
 
 lazy val testDeps = {
   val scalatestVersion     = "3.0.1"
-  val scalaCheckVersion    = "1.13.4"
+  val scalaCheckVersion    = "1.13.5"
   val cassandraUnitVersion = "3.1.3.2"
 
   Seq(

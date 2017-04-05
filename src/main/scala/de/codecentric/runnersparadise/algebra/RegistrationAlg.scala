@@ -10,5 +10,5 @@ trait RegistrationAlg[F[_]] {
 }
 
 object RegistrationAlg {
-  def apply[F[_]: RegistrationAlg](): RegistrationAlg[F] = implicitly
+  def apply[F[_]: RegistrationAlg]: RegistrationAlg[F] = implicitly
 }

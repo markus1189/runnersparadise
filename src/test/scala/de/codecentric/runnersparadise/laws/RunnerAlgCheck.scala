@@ -29,7 +29,7 @@ abstract class RunnerAlgCheck[F[_]: Applicative: RunnerAlg](name: String)
   s"RunnerAlg instance $name" should {
     "satisfy the law that find after save returns the same runner" in {
       forAll { (runner: Runner) =>
-        run(RunnerAlg().saveRunner(runner) *> RunnerAlg().findRunner(runner.id)).value should ===(
+        run(RunnerAlg[F].saveRunner(runner) *> RunnerAlg[F].findRunner(runner.id)).value should ===(
           runner)
       }
     }
@@ -37,7 +37,7 @@ abstract class RunnerAlgCheck[F[_]: Applicative: RunnerAlg](name: String)
     "be idempotent wrt save" in {
       forAll { (runner: Runner) =>
         def saveN(n: Int): F[Option[Runner]] =
-          Applicative.apply[F].replicateM_(n, RunnerAlg().saveRunner(runner)) *> RunnerAlg()
+          Applicative.apply[F].replicateM_(n, RunnerAlg[F].saveRunner(runner)) *> RunnerAlg[F]
             .findRunner(runner.id)
 
         val saveOnce  = saveN(1)
@@ -52,9 +52,9 @@ abstract class RunnerAlgCheck[F[_]: Applicative: RunnerAlg](name: String)
       implicit def shrink[A]: Shrink[A] = Shrink(_ => Stream())
 
       forAll { (initial: Vector[Runner], newRunner: Runner) =>
-        val saveInitial = initial.traverse_(RunnerAlg().saveRunner)
+        val saveInitial = initial.traverse_(RunnerAlg[F].saveRunner)
         val listed = run {
-          saveInitial *> RunnerAlg().saveRunner(newRunner) *> RunnerAlg().listRunners
+          saveInitial *> RunnerAlg[F].saveRunner(newRunner) *> RunnerAlg[F].listRunners
         }
 
         listed.sorted should ===((initial :+ newRunner).sorted)
