@@ -27,9 +27,9 @@ object MainInMemory extends ServerApp {
 }
 
 object MainCassandra extends ServerApp {
-  val srv: RaceRegistrationService[Cass, RngNames] = new RaceRegistrationService[Cass, RngNames](new (Cass ~> Task) {
-    override def apply[A](fa: Cass[A]): Task[A] = fa.run(RunnersParadiseDb)
-  }, RngNames.toTaskGlobal)
+  val srv: RaceRegistrationService[Cass, RngNames] = new RaceRegistrationService[Cass, RngNames](
+    Cass.toTask(RunnersParadiseDb),
+    RngNames.toTaskGlobal)
 
   override def server(args: List[String]): Task[Server] =
     BlazeBuilder.bindHttp(port = 8080, host = "localhost").mountService(srv.service, "/").start
@@ -39,15 +39,18 @@ object MainWithCassandraWithLogWithMeta extends ServerApp {
   private val logger = LoggerFactory.getLogger("de.codecentric.MainWithCassandraWithLogWithMeta")
 
   val srv: RaceRegistrationService[Log[Meta[Cass, ?], ?], RngNames] =
-    new RaceRegistrationService[Log[Meta[Cass, ?], ?], RngNames](new (Log[Meta[Cass, ?], ?] ~> Task) {
-      override def apply[A](fa: Log[Meta[Cass, ?], A]): Task[A] = {
-        fa.value(logger).run.run(MetaInfo(0, 0, 0)).run(RunnersParadiseDb).map {
-          case (info, res) =>
-            logger.info(s"MetaInfo calculated: $info")
-            res
+    new RaceRegistrationService[Log[Meta[Cass, ?], ?], RngNames](
+      new (Log[Meta[Cass, ?], ?] ~> Task) {
+        override def apply[A](fa: Log[Meta[Cass, ?], A]): Task[A] = {
+          fa.value(logger).run.run(MetaInfo(0, 0, 0)).run(RunnersParadiseDb).map {
+            case (info, res) =>
+              logger.info(s"MetaInfo calculated: $info")
+              res
+          }
         }
-      }
-    }, RngNames.toTaskGlobal)
+      },
+      RngNames.toTaskGlobal
+    )
 
   override def server(args: List[String]): Task[Server] =
     BlazeBuilder.bindHttp(port = 8080, host = "localhost").mountService(srv.service, "/").start
@@ -67,13 +70,16 @@ object MainInMemoryLogging extends ServerApp {
   val state = new AtomicReference(PureState.empty)
 
   val srv: RaceRegistrationService[Log[Pure, ?], RngNames] =
-    new RaceRegistrationService[Log[Pure, ?], RngNames](new (Log[Pure, ?] ~> Task) {
-      override def apply[A](fa: Log[Pure, A]): Task[A] = {
-        val pure: Pure[A] =
-          fa.value.run(LoggerFactory.getLogger("de.codecentric.MainInMemoryLogging"))
-        Task.delay(pure.value(state))
-      }
-    }, RngNames.toTaskGlobal)
+    new RaceRegistrationService[Log[Pure, ?], RngNames](
+      new (Log[Pure, ?] ~> Task) {
+        override def apply[A](fa: Log[Pure, A]): Task[A] = {
+          val pure: Pure[A] =
+            fa.value.run(LoggerFactory.getLogger("de.codecentric.MainInMemoryLogging"))
+          Task.delay(pure.value(state))
+        }
+      },
+      RngNames.toTaskGlobal
+    )
 
   override def server(args: List[String]): Task[Server] =
     BlazeBuilder.bindHttp(port = 8080, host = "localhost").mountService(srv.service, "/").start

@@ -6,7 +6,7 @@ import de.codecentric.runnersparadise.domain._
 
 import scalaz.concurrent.Task
 import scalaz.syntax.functor._
-import scalaz.{Monad, ReaderT}
+import scalaz.{Monad, ReaderT, ~>}
 
 class Cass[A](val value: ReaderT[Task, RunnersParadiseDb, A]) extends AnyVal {
   def run: RunnersParadiseDb => Task[A] = value.run
@@ -14,6 +14,10 @@ class Cass[A](val value: ReaderT[Task, RunnersParadiseDb, A]) extends AnyVal {
 
 object Cass {
   def apply[A](f: RunnersParadiseDb => Task[A]): Cass[A] = new Cass(ReaderT(f))
+
+  def toTask(db: RunnersParadiseDb): Cass ~> Task = new (Cass ~> Task) {
+    override def apply[A](fa: Cass[A]): Task[A] = fa.run(db)
+  }
 
   implicit val algebraInstances: RunnerAlg[Cass] with RaceAlg[Cass] with RegistrationAlg[Cass] =
     new RunnerAlg[Cass] with RaceAlg[Cass] with RegistrationAlg[Cass] {
