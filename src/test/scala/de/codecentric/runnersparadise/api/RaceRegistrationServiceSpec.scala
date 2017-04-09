@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import de.codecentric.runnersparadise.domain._
 import de.codecentric.runnersparadise.fixtures.{RaceFixtures, RunnerFixtures}
-import de.codecentric.runnersparadise.interpreters.{Pure, PureState}
+import de.codecentric.runnersparadise.interpreters.{Pure, PureState, RngNames}
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
@@ -155,7 +155,7 @@ class RaceRegistrationServiceSpec extends UnitSpec {
 
     val registrationService = new RaceRegistrationService(new (Pure ~> Task) {
       override def apply[A](fa: Pure[A]): Task[A] = Task.delay(fa.value(state))
-    })
+    }, RngNames.toTaskGlobal)
 
     def performRequest(req: Request): Response = registrationService.service.run(req).run
 

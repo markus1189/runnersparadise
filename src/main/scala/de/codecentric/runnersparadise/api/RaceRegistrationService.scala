@@ -3,12 +3,7 @@ package de.codecentric.runnersparadise.api
 import java.util.UUID
 
 import de.codecentric.runnersparadise.Errors.RegistrationError._
-import de.codecentric.runnersparadise.algebra.{
-  RaceAlg,
-  RegistrationAlg,
-  RunnerAlg,
-  RunnerFunctions
-}
+import de.codecentric.runnersparadise.algebra._
 import de.codecentric.runnersparadise.domain.{Race, RaceId, RunnerId}
 import de.codecentric.runnersparadise.programs.Programs
 import io.circe.Decoder
@@ -23,7 +18,9 @@ import scalaz.concurrent.Task
 import scalaz.syntax.apply._
 import scalaz.{Monad, \/, ~>}
 
-class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](toTask: F ~> Task) {
+class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg, G[_]: NameAlg](
+    natF: F ~> Task,
+    natG: G ~> Task) {
 
   import RaceRegistrationService._
 
@@ -35,6 +32,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
       case GET -> Root / "registration" / RaceIdVar(rid) => handleGetRegistration(rid)
       case req @ PUT -> Root / "registration"            => handleRegistration(req)
       case req @ POST -> Root / "runner"                 => handleAddRunner(req)
+      case req @ POST -> Root / "runner" / "random"      => handleAddRandomRunner()
       case req @ POST -> Root / "race"                   => handleAddRace(req)
     }
 
@@ -42,7 +40,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
       request.decodeWith(jsonOf[AddRace], strict = true) { r =>
         val raceId = RaceId.random()
         val race   = Race(raceId, r.name, r.maxAttendees)
-        toTask(RaceAlg[F].saveRace(race)) *>
+        natF(RaceAlg[F].saveRace(race)) *>
           Uri
             .fromString(s"/race/${raceId.value}")
             .map(uri => Created(race.asJson).putHeaders(Location(uri)))
@@ -53,14 +51,14 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     def handleAbout(): Task[Response] = Ok(messages.about)
 
     def handleGetRunner(rid: RunnerId): Task[Response] = {
-      toTask(RunnerAlg[F].findRunner(rid)).flatMap {
+      natF(RunnerAlg[F].findRunner(rid)).flatMap {
         case Some(runner) => Ok(runner.asJson)
         case None         => NotFound(messages.noSuchRunner(rid))
       }
     }
 
     def handleGetRace(rid: RaceId): Task[Response] = {
-      toTask(RaceAlg[F].findRace(rid)).flatMap {
+      natF(RaceAlg[F].findRace(rid)).flatMap {
         case Some(race) => Ok(race.asJson)
         case None       => NotFound(messages.noSuchRace(rid))
       }
@@ -69,7 +67,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     def handleAddRunner(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[AddRunner], strict = true) { r =>
         val runner = RunnerFunctions.createRunner(r)
-        toTask(RunnerAlg[F].saveRunner(runner)) *>
+        natF(RunnerAlg[F].saveRunner(runner)) *>
           Uri
             .fromString(s"/runner/${runner.id.value}")
             .map(uri => Created(runner.asJson).putHeaders(Location(uri)))
@@ -77,9 +75,23 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
       }
     }
 
+    def handleAddRandomRunner(): Task[Response] = {
+      for {
+        names <- natG(NameAlg[G].randomName)
+        runner = RunnerFunctions.createRunner(AddRunner(names._1, names._2, None))
+        _ <- natF(RunnerAlg[F].saveRunner(runner))
+        res <- Uri
+          .fromString(s"/runner/${runner.id.value}")
+          .map(uri => Created(runner.asJson).putHeaders(Location(uri)))
+          .getOrElse(InternalServerError())
+      } yield {
+        res
+      }
+    }
+
     def handleRegistration(request: Request): Task[Response] = {
       request.decodeWith(jsonOf[Register], strict = true) { registration =>
-        toTask(Programs.register[F](registration.runner, registration.race)).flatMap {
+        natF(Programs.register[F](registration.runner, registration.race)).flatMap {
           case Right(reg) =>
             if (reg.attendees.size == 1) {
               Uri
@@ -102,7 +114,7 @@ class RaceRegistrationService[F[_]: Monad: RunnerAlg: RaceAlg: RegistrationAlg](
     }
 
     def handleGetRegistration(raceId: RaceId): Task[Response] = {
-      toTask(RegistrationAlg[F].findReg(raceId)).flatMap {
+      natF(RegistrationAlg[F].findReg(raceId)).flatMap {
         case Some(reg) => Ok(reg.asJson)
         case None      => NotFound(messages.registrationNotFound(raceId))
       }
