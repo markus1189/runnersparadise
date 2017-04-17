@@ -4,12 +4,16 @@ import de.codecentric.runnersparadise.algebra.{RaceAlg, RegistrationAlg, RunnerA
 import de.codecentric.runnersparadise.domain._
 import org.slf4j.Logger
 
-import scalaz.{Id, Monad, Reader}
+import scalaz.{Id, Monad, Reader, ~>}
 
 class Log[F[_], A](val value: Reader[Logger, F[A]]) extends AnyVal
 
 object Log {
   def apply[F[_], A](f: Logger => F[A]): Log[F, A] = new Log[F, A](Reader(f))
+
+  def unwrap[F[_]](logger: Logger): Log[F,?] ~> F = new (Log[F,?] ~> F) {
+    override def apply[A](fa: Log[F, A]): F[A] = fa.value(logger)
+  }
 
   implicit def algebraInstances[F[_]: RunnerAlg: RaceAlg: RegistrationAlg]
     : RunnerAlg[Log[F, ?]] with RaceAlg[Log[F, ?]] with RegistrationAlg[Log[F, ?]] = {
